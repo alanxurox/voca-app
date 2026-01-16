@@ -7,8 +7,8 @@ xcuserdata/
 dist/
 
 
-# Models (downloaded on-demand)
-models/coreml/
+# Models (downloaded on-demand, large files)
+models/
 
 # macOS
 .DS_Store

@@ -36,10 +36,10 @@ class ModelManager: NSObject {
         .whisperTurbo: "https://github.com/zhengyishen0/voca-app/releases/download/models-v1/whisper-turbo.zip"
     ]
 
-    // Model folder names after extraction
+    // Model folder names after extraction (must match what ASREngine expects)
     private let modelFolderNames: [ASRModel: String] = [
-        .senseVoice: "SenseVoiceSmall.mlmodelc",
-        .whisperTurbo: "WhisperTurbo.mlmodelc"
+        .senseVoice: "sensevoice-500-itn.mlmodelc",
+        .whisperTurbo: "whisper-turbo.mlmodelc"  // Not yet available
     ]
 
     var modelDirectory: URL {
