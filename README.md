@@ -5,7 +5,7 @@
 <h1 align="center">Voca</h1>
 
 <p align="center">
-	<strong>The free voice-to-text app for Mac.</strong>
+	<strong>Speak freely.</strong>
 </p>
 
 <p align="center">
@@ -20,7 +20,7 @@
 		<img src="https://img.shields.io/github/downloads/zhengyishen0/voca-app/total?style=flat-square&color=brightgreen" alt="Downloads">
 	</a>
 	<img src="https://img.shields.io/badge/macOS-13.0+-orange?style=flat-square" alt="macOS 13+">
-	<img src="https://img.shields.io/badge/Apple_Silicon-required-red?style=flat-square" alt="Apple Silicon">
+	<img src="https://img.shields.io/badge/Apple_Silicon-required-blue?style=flat-square" alt="Apple Silicon">
 	<img src="https://img.shields.io/badge/99+_Languages-blue?style=flat-square" alt="99+ Languages">
 </p>
 
