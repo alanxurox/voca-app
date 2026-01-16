@@ -109,7 +109,7 @@ class StatusBarController: NSObject {
         let shortcut = "⌃⌥V"
 
         let paragraphStyle = NSMutableParagraphStyle()
-        paragraphStyle.tabStops = [NSTextTab(textAlignment: .right, location: 200)]
+        paragraphStyle.tabStops = [NSTextTab(textAlignment: .right, location: 120)]
 
         let attributed = NSMutableAttributedString(
             string: "\(title)\t\(shortcut)",
@@ -168,7 +168,7 @@ class StatusBarController: NSObject {
 
     private func createModelTitle(_ name: String, rightText: String) -> NSAttributedString {
         let paragraphStyle = NSMutableParagraphStyle()
-        paragraphStyle.tabStops = [NSTextTab(textAlignment: .right, location: 180)]
+        paragraphStyle.tabStops = [NSTextTab(textAlignment: .right, location: 120)]
 
         return NSAttributedString(
             string: "  \(name)\t\(rightText)",
