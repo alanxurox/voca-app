@@ -5,7 +5,7 @@
 <h1 align="center">Voca</h1>
 
 <p align="center">
-	<strong>Speak freely.</strong>
+	<strong>Voice your thoughts.</strong>
 </p>
 
 <p align="center">
@@ -30,7 +30,7 @@
 
 ---
 
-Why pay $15/month for voice transcription? Voca is a **100% free**, open-source voice-to-text app that runs entirely on your Mac. No cloud. No subscription. No limits.
+Turn speech into text instantly. Voca is **100% free**, open source, and runs entirely on your Mac. No cloud. No subscription. No limits.
 
 Supports 99+ languages with on-device AI. Your voice never leaves your Mac.
 
