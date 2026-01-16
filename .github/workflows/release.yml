@@ -26,6 +26,28 @@ jobs:
           echo "BUILD_NUMBER=$BUILD_NUMBER" >> $GITHUB_ENV
           echo "Setting version to $VERSION (build $BUILD_NUMBER)"
 
+      - name: Import Code Signing Certificate
+        env:
+          APPLE_CERTIFICATE_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+        run: |
+          # Create temporary keychain
+          KEYCHAIN_PATH=$RUNNER_TEMP/signing.keychain-db
+          KEYCHAIN_PASSWORD=$(openssl rand -base64 32)
+
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+          # Import certificate
+          echo "$APPLE_CERTIFICATE_BASE64" | base64 --decode > $RUNNER_TEMP/certificate.p12
+          security import $RUNNER_TEMP/certificate.p12 -P "$APPLE_CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+          security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security list-keychain -d user -s "$KEYCHAIN_PATH"
+
+          # Clean up
+          rm $RUNNER_TEMP/certificate.p12
+
       - name: Build Release
         run: swift build -c release
 
@@ -33,6 +55,49 @@ jobs:
         run: |
           chmod +x scripts/bundle-app.sh
           ./scripts/bundle-app.sh "$VERSION" "$BUILD_NUMBER"
+
+      - name: Code Sign App
+        env:
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          IDENTITY="Developer ID Application: Zhengyi Shen ($APPLE_TEAM_ID)"
+
+          # Sign the framework first (sign inside-out)
+          codesign --force --options runtime --timestamp \
+            --sign "$IDENTITY" \
+            "dist/Voca.app/Contents/Frameworks/VoicePipeline.framework"
+
+          # Sign the main app
+          codesign --force --options runtime --timestamp \
+            --sign "$IDENTITY" \
+            "dist/Voca.app"
+
+          # Verify signature
+          codesign --verify --deep --strict "dist/Voca.app"
+          echo "Code signing completed successfully"
+
+      - name: Notarize App
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          # Create zip for notarization
+          ditto -c -k --keepParent "dist/Voca.app" "Voca-notarize.zip"
+
+          # Submit for notarization and wait
+          xcrun notarytool submit "Voca-notarize.zip" \
+            --apple-id "$APPLE_ID" \
+            --team-id "$APPLE_TEAM_ID" \
+            --password "$APPLE_APP_PASSWORD" \
+            --wait
+
+          # Staple the notarization ticket
+          xcrun stapler staple "dist/Voca.app"
+
+          # Clean up
+          rm "Voca-notarize.zip"
+          echo "Notarization completed successfully"
 
       - name: Install create-dmg
         run: brew install create-dmg
@@ -68,8 +133,7 @@ jobs:
             **Download**
             1. Download `Voca-${{ env.VERSION }}.dmg`
             2. Open the DMG and drag Voca to Applications
-            3. Right-click → Open (first launch only)
-            4. Grant Accessibility and Microphone permissions when prompted
+            3. Grant Accessibility and Microphone permissions when prompted
 
             **Homebrew**
             ```bash
