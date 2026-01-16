@@ -17,7 +17,7 @@
 	</a>
 	<img src="https://img.shields.io/badge/macOS-13.0+-orange?style=flat-square" alt="macOS 13+">
 	<img src="https://img.shields.io/badge/Apple_Silicon-required-blue?style=flat-square" alt="Apple Silicon">
-	<img src="https://img.shields.io/badge/99+_Languages-blue?style=flat-square" alt="99+ Languages">
+	<img src="https://img.shields.io/badge/Languages-99+-blue?style=flat-square" alt="99+ Languages">
 </p>
 
 <p align="center">
