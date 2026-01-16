@@ -157,7 +157,15 @@ class StatusBarController: NSObject {
         // Simulate Cmd+V using cgSessionEventTap (based on Maccy implementation)
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
             let vKeyCode: CGKeyCode = 0x09  // V key
-            let source = CGEventSource(stateID: .hidSystemState)
+
+            // Use combinedSessionState like Maccy does
+            let source = CGEventSource(stateID: .combinedSessionState)
+
+            // Configure event filtering during suppression (key for hardened runtime)
+            source?.setLocalEventsFilterDuringSuppressionState(
+                [.permitLocalMouseEvents, .permitSystemDefinedEvents],
+                state: .eventSuppressionStateSuppressionInterval
+            )
 
             let keyDown = CGEvent(keyboardEventSource: source, virtualKey: vKeyCode, keyDown: true)
             let keyUp = CGEvent(keyboardEventSource: source, virtualKey: vKeyCode, keyDown: false)

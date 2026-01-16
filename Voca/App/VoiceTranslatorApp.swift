@@ -239,8 +239,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // https://github.com/p0deje/Maccy/blob/master/Maccy/Clipboard.swift
         let vKeyCode: CGKeyCode = 0x09  // V key
 
-        let source = CGEventSource(stateID: .hidSystemState)
+        // Use combinedSessionState like Maccy does
+        let source = CGEventSource(stateID: .combinedSessionState)
         print("  - Event source created: \(source != nil)")
+
+        // Configure event filtering during suppression (key for hardened runtime)
+        source?.setLocalEventsFilterDuringSuppressionState(
+            [.permitLocalMouseEvents, .permitSystemDefinedEvents],
+            state: .eventSuppressionStateSuppressionInterval
+        )
 
         let keyDown = CGEvent(keyboardEventSource: source, virtualKey: vKeyCode, keyDown: true)
         let keyUp = CGEvent(keyboardEventSource: source, virtualKey: vKeyCode, keyDown: false)
@@ -251,7 +258,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         keyDown?.flags = cmdFlag
         keyUp?.flags = cmdFlag
 
-        // Post to cgSessionEventTap (not cghidEventTap)
+        // Post to cgSessionEventTap
         keyDown?.post(tap: .cgSessionEventTap)
         keyUp?.post(tap: .cgSessionEventTap)
         print("  - Events posted to cgSessionEventTap")
