@@ -30,7 +30,7 @@
 
 ---
 
-Express your ideas at the speed of thought. Just speak, and let your words flow.
+Express your ideas at the speed of thought. Just speak, and let your ideas flow.
 
 Supports 99+ languages with on-device AI. 100% private—your voice never leaves your Mac.
 
