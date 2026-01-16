@@ -88,13 +88,15 @@ jobs:
             --sign "$IDENTITY" \
             "dist/Voca.app/Contents/Frameworks/VoicePipeline.framework/Versions/A"
 
-          # Sign the main executable
+          # Sign the main executable with entitlements
           codesign --force --options runtime --timestamp \
+            --entitlements Voca.entitlements \
             --sign "$IDENTITY" \
             "dist/Voca.app/Contents/MacOS/Voca"
 
-          # Sign the app bundle
+          # Sign the app bundle with entitlements
           codesign --force --options runtime --timestamp \
+            --entitlements Voca.entitlements \
             --sign "$IDENTITY" \
             "dist/Voca.app"
 
