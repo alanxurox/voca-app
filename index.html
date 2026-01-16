@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Voca - Voice to Text for Mac</title>
-    <meta name="description" content="Voca is a macOS menu bar app for voice-to-text transcription. Double-tap Command to record, release to transcribe and auto-paste.">
+    <meta name="description" content="Voca is a blazing fast, multilingual voice-to-text app for macOS. Supports 99+ languages with on-device AI.">
     <link rel="icon" type="image/png" href="misc/icon.png">
     <style>
         * {
@@ -25,6 +25,39 @@
             line-height: 1.6;
             overflow-x: hidden;
             position: relative;
+        }
+
+        /* Language switcher */
+        .lang-switcher {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+            display: flex;
+            gap: 8px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 6px 10px;
+            border-radius: 8px;
+        }
+
+        .lang-btn {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 13px;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .lang-btn:hover {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .lang-btn.active {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.15);
         }
 
         /* Sound wave animation */
@@ -136,40 +169,35 @@
         .description {
             font-size: 17px;
             color: #666666;
-            max-width: 500px;
+            max-width: 520px;
             margin: 0 auto;
             line-height: 1.7;
         }
 
-        /* Keyboard shortcut display */
-        .shortcut-display {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            margin-top: 24px;
-            padding: 12px 20px;
-            background: rgba(0, 0, 0, 0.6);
-            border-radius: 12px;
-        }
-
-        .key {
-            display: inline-flex;
-            align-items: center;
+        /* Highlight badges */
+        .highlights {
+            display: flex;
             justify-content: center;
-            min-width: 32px;
-            height: 32px;
-            padding: 0 10px;
-            background: #000000;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 600;
-            color: #ffffff;
-            box-shadow: 0 2px 0 rgba(0, 0, 0, 0.3);
+            gap: 12px;
+            margin-top: 24px;
+            flex-wrap: wrap;
         }
 
-        .shortcut-text {
+        .highlight-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 18px;
+            background: rgba(0, 0, 0, 0.85);
+            border-radius: 10px;
             font-size: 14px;
-            color: rgba(255, 255, 255, 0.7);
+            font-weight: 500;
+            color: #ffffff;
+        }
+
+        .highlight-badge svg {
+            width: 16px;
+            height: 16px;
         }
 
         /* Download section */
@@ -240,6 +268,10 @@
             }
             h1 {
                 font-size: 48px;
+            }
+            .highlights {
+                flex-direction: column;
+                align-items: center;
             }
         }
 
@@ -365,6 +397,15 @@
     </style>
 </head>
 <body>
+    <!-- Language Switcher -->
+    <div class="lang-switcher">
+        <button class="lang-btn active" onclick="setLang('en')">EN</button>
+        <button class="lang-btn" onclick="setLang('zh')">中文</button>
+        <button class="lang-btn" onclick="setLang('ja')">日本語</button>
+        <button class="lang-btn" onclick="setLang('ko')">한국어</button>
+        <button class="lang-btn" onclick="setLang('es')">ES</button>
+    </div>
+
     <!-- Sound wave background -->
     <div class="soundwave-bg">
         <div class="wave">
@@ -395,14 +436,32 @@
         <div class="hero">
             <img src="misc/icon.png" alt="Voca" class="icon">
             <h1>Voca</h1>
-            <p class="tagline">Voice to text, instantly.</p>
-            <p class="description">
-                A macOS menu bar app for voice transcription. Double-tap Command to record, release to transcribe and auto-paste anywhere.
+            <p class="tagline" data-i18n="tagline">The free voice-to-text app for Mac.</p>
+            <p class="description" data-i18n="description">
+                Why pay $15/month for voice transcription? Voca is 100% free, open source, and runs entirely on your Mac. No cloud. No subscription. No limits.
             </p>
-            <div class="shortcut-display">
-                <span class="key">&#8984;</span>
-                <span class="key">&#8984;</span>
-                <span class="shortcut-text">to record</span>
+            <div class="highlights">
+                <div class="highlight-badge">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                    </svg>
+                    <span data-i18n="badge-fast">Blazing Fast</span>
+                </div>
+                <div class="highlight-badge">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="2" y1="12" x2="22" y2="12"/>
+                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                    </svg>
+                    <span data-i18n="badge-lang">99+ Languages</span>
+                </div>
+                <div class="highlight-badge">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                    </svg>
+                    <span data-i18n="badge-privacy">100% Private</span>
+                </div>
             </div>
         </div>
 
@@ -414,7 +473,7 @@
                     <polyline points="7 10 12 15 17 10"/>
                     <line x1="12" y1="15" x2="12" y2="3"/>
                 </svg>
-                Download for Mac
+                <span data-i18n="download">Download for Mac</span>
             </a>
             <script>
                 fetch('https://api.github.com/repos/zhengyishen0/voca-app/releases/latest')
@@ -427,31 +486,31 @@
                     })
                     .catch(() => {});
             </script>
-            <p class="version-note">Free and open source</p>
+            <p class="version-note" data-i18n="version-note">Free and open source</p>
             <div class="secondary-links">
-                <a href="https://github.com/zhengyishen0/voca-app" class="secondary-link">View on GitHub</a>
-                <a href="https://github.com/zhengyishen0/voca-app#installation" class="secondary-link">Installation Guide</a>
+                <a href="https://github.com/zhengyishen0/voca-app" class="secondary-link" data-i18n="github">View on GitHub</a>
+                <a href="https://github.com/zhengyishen0/voca-app#installation" class="secondary-link" data-i18n="install-guide">Installation Guide</a>
             </div>
         </div>
 
         <!-- How it works -->
         <div class="how-it-works">
-            <h2>How it works</h2>
+            <h2 data-i18n="how-title">How it works</h2>
             <div class="steps">
                 <div class="step">
                     <div class="step-number">1</div>
-                    <h4>Double-tap Command</h4>
-                    <p>Press &#8984; twice quickly to start recording</p>
+                    <h4 data-i18n="step1-title">Press Hotkey</h4>
+                    <p data-i18n="step1-desc">Use your customizable shortcut to start recording</p>
                 </div>
                 <div class="step">
                     <div class="step-number">2</div>
-                    <h4>Speak</h4>
-                    <p>Watch the waveform respond to your voice</p>
+                    <h4 data-i18n="step2-title">Speak</h4>
+                    <p data-i18n="step2-desc">Watch the waveform respond to your voice</p>
                 </div>
                 <div class="step">
                     <div class="step-number">3</div>
-                    <h4>Release</h4>
-                    <p>Text is transcribed and auto-pasted</p>
+                    <h4 data-i18n="step3-title">Release</h4>
+                    <p data-i18n="step3-desc">Text is transcribed and auto-pasted</p>
                 </div>
             </div>
         </div>
@@ -459,38 +518,30 @@
         <!-- Features -->
         <div class="features">
             <div class="feature">
-                <!-- Waveform icon -->
                 <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M12 2v20"/>
-                    <path d="M8 6v12"/>
-                    <path d="M16 6v12"/>
-                    <path d="M4 10v4"/>
-                    <path d="M20 10v4"/>
+                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
                 </svg>
-                <h3>Live Waveform</h3>
-                <p>Animated floating overlay responds to your voice levels in real-time.</p>
+                <h3 data-i18n="feat1-title">Lightning Speed</h3>
+                <p data-i18n="feat1-desc">Optimized CoreML models deliver instant transcription on Apple Silicon.</p>
             </div>
             <div class="feature">
-                <!-- Brain/AI icon -->
                 <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2Z"/>
-                    <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2Z"/>
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="2" y1="12" x2="22" y2="12"/>
+                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
                 </svg>
-                <h3>On-Device AI</h3>
-                <p>CoreML models run locally. Your voice never leaves your Mac.</p>
+                <h3 data-i18n="feat2-title">99+ Languages</h3>
+                <p data-i18n="feat2-desc">From English to Chinese, Japanese, Korean, Spanish, and many more.</p>
             </div>
             <div class="feature">
-                <!-- History/clock icon -->
                 <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
-                    <path d="M3 3v5h5"/>
-                    <path d="M12 7v5l4 2"/>
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                 </svg>
-                <h3>History</h3>
-                <p>Access your recent transcriptions instantly with &#8963;&#8997;V.</p>
+                <h3 data-i18n="feat3-title">100% Private</h3>
+                <p data-i18n="feat3-desc">All processing happens on-device. Your voice never leaves your Mac.</p>
             </div>
             <div class="feature">
-                <!-- Keyboard icon -->
                 <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                     <rect x="2" y="4" width="20" height="16" rx="2"/>
                     <path d="M6 8h.01"/>
@@ -503,18 +554,195 @@
                     <path d="M18 12h.01"/>
                     <path d="M8 16h8"/>
                 </svg>
-                <h3>Auto-Paste</h3>
-                <p>Transcribed text is automatically pasted wherever your cursor is.</p>
+                <h3 data-i18n="feat4-title">Auto-Paste</h3>
+                <p data-i18n="feat4-desc">Transcribed text is automatically pasted wherever your cursor is.</p>
             </div>
         </div>
 
         <div class="requirements">
-            <p>Requires <strong>Apple Silicon</strong> and <strong>macOS 13.0+</strong></p>
+            <p><span data-i18n="requires">Requires</span> <strong>Apple Silicon</strong> <span data-i18n="and">and</span> <strong>macOS 13.0+</strong></p>
         </div>
 
         <footer>
-            <p>Made by <a href="https://x.com/ZhengyiShen">Zhengyi Shen</a></p>
+            <p><span data-i18n="made-by">Made by</span> <a href="https://x.com/ZhengyiShen">Zhengyi Shen</a></p>
         </footer>
     </div>
+
+    <script>
+        const translations = {
+            en: {
+                tagline: "The free voice-to-text app for Mac.",
+                description: "Why pay $15/month for voice transcription? Voca is 100% free, open source, and runs entirely on your Mac. No cloud. No subscription. No limits.",
+                "badge-fast": "Blazing Fast",
+                "badge-lang": "99+ Languages",
+                "badge-privacy": "100% Private",
+                download: "Download for Mac",
+                "version-note": "Free and open source",
+                github: "View on GitHub",
+                "install-guide": "Installation Guide",
+                "how-title": "How it works",
+                "step1-title": "Press Hotkey",
+                "step1-desc": "Use your customizable shortcut to start recording",
+                "step2-title": "Speak",
+                "step2-desc": "Watch the waveform respond to your voice",
+                "step3-title": "Release",
+                "step3-desc": "Text is transcribed and auto-pasted",
+                "feat1-title": "Lightning Speed",
+                "feat1-desc": "Optimized CoreML models deliver instant transcription on Apple Silicon.",
+                "feat2-title": "99+ Languages",
+                "feat2-desc": "From English to Chinese, Japanese, Korean, Spanish, and many more.",
+                "feat3-title": "100% Private",
+                "feat3-desc": "All processing happens on-device. Your voice never leaves your Mac.",
+                "feat4-title": "Auto-Paste",
+                "feat4-desc": "Transcribed text is automatically pasted wherever your cursor is.",
+                requires: "Requires",
+                and: "and",
+                "made-by": "Made by"
+            },
+            zh: {
+                tagline: "Mac 上免费的语音转文字应用。",
+                description: "为什么要每月花 $15 订阅语音转写服务？Voca 完全免费、开源，完全在您的 Mac 上运行。无需云端、无需订阅、无限制使用。",
+                "badge-fast": "极速转写",
+                "badge-lang": "99+ 种语言",
+                "badge-privacy": "完全私密",
+                download: "下载 Mac 版",
+                "version-note": "免费开源",
+                github: "在 GitHub 查看",
+                "install-guide": "安装指南",
+                "how-title": "使用方法",
+                "step1-title": "按下快捷键",
+                "step1-desc": "使用可自定义的快捷键开始录音",
+                "step2-title": "说话",
+                "step2-desc": "观看波形随声音实时变化",
+                "step3-title": "松开",
+                "step3-desc": "文字自动转写并粘贴",
+                "feat1-title": "闪电速度",
+                "feat1-desc": "优化的 CoreML 模型在 Apple Silicon 上实现即时转写。",
+                "feat2-title": "99+ 种语言",
+                "feat2-desc": "支持中文、英文、日语、韩语、西班牙语等多种语言。",
+                "feat3-title": "完全私密",
+                "feat3-desc": "所有处理都在本地完成。您的语音永不离开您的 Mac。",
+                "feat4-title": "自动粘贴",
+                "feat4-desc": "转写的文字自动粘贴到光标所在位置。",
+                requires: "需要",
+                and: "和",
+                "made-by": "作者"
+            },
+            ja: {
+                tagline: "Mac用の無料音声テキスト変換アプリ。",
+                description: "音声文字起こしに月額$15も払う必要はありません。Vocaは完全無料、オープンソース、すべてMac上で動作。クラウド不要、サブスク不要、制限なし。",
+                "badge-fast": "超高速",
+                "badge-lang": "99+ 言語",
+                "badge-privacy": "完全プライベート",
+                download: "Mac版をダウンロード",
+                "version-note": "無料でオープンソース",
+                github: "GitHubで見る",
+                "install-guide": "インストールガイド",
+                "how-title": "使い方",
+                "step1-title": "ホットキーを押す",
+                "step1-desc": "カスタマイズ可能なショートカットで録音開始",
+                "step2-title": "話す",
+                "step2-desc": "波形が声に反応するのを見る",
+                "step3-title": "離す",
+                "step3-desc": "テキストが自動で文字起こしされ貼り付けられます",
+                "feat1-title": "超高速",
+                "feat1-desc": "最適化されたCoreMLモデルがApple Siliconで即座に文字起こし。",
+                "feat2-title": "99+ 言語",
+                "feat2-desc": "英語、中国語、日本語、韓国語、スペイン語など多数の言語に対応。",
+                "feat3-title": "完全プライベート",
+                "feat3-desc": "すべての処理はデバイス上で行われます。音声はMacから外に出ません。",
+                "feat4-title": "自動貼り付け",
+                "feat4-desc": "文字起こしされたテキストはカーソル位置に自動的に貼り付けられます。",
+                requires: "必要環境",
+                and: "と",
+                "made-by": "作者"
+            },
+            ko: {
+                tagline: "Mac용 무료 음성-텍스트 앱.",
+                description: "음성 전사에 매월 $15를 지불할 필요가 없습니다. Voca는 100% 무료, 오픈소스이며 완전히 Mac에서 실행됩니다. 클라우드 없음, 구독 없음, 제한 없음.",
+                "badge-fast": "초고속",
+                "badge-lang": "99+ 언어",
+                "badge-privacy": "완전한 프라이버시",
+                download: "Mac용 다운로드",
+                "version-note": "무료 오픈소스",
+                github: "GitHub에서 보기",
+                "install-guide": "설치 가이드",
+                "how-title": "사용 방법",
+                "step1-title": "단축키 누르기",
+                "step1-desc": "사용자 정의 단축키로 녹음 시작",
+                "step2-title": "말하기",
+                "step2-desc": "음성에 반응하는 파형 확인",
+                "step3-title": "놓기",
+                "step3-desc": "텍스트가 자동으로 전사되어 붙여넣기됩니다",
+                "feat1-title": "번개 속도",
+                "feat1-desc": "최적화된 CoreML 모델이 Apple Silicon에서 즉각적인 전사를 제공합니다.",
+                "feat2-title": "99+ 언어",
+                "feat2-desc": "영어, 중국어, 일본어, 한국어, 스페인어 등 다양한 언어를 지원합니다.",
+                "feat3-title": "완전한 프라이버시",
+                "feat3-desc": "모든 처리가 기기에서 이루어집니다. 음성은 Mac 밖으로 나가지 않습니다.",
+                "feat4-title": "자동 붙여넣기",
+                "feat4-desc": "전사된 텍스트가 커서 위치에 자동으로 붙여넣기됩니다.",
+                requires: "요구 사항",
+                and: "및",
+                "made-by": "만든이"
+            },
+            es: {
+                tagline: "La app gratuita de voz a texto para Mac.",
+                description: "¿Por qué pagar $15/mes por transcripción de voz? Voca es 100% gratis, código abierto, y funciona completamente en tu Mac. Sin nube. Sin suscripción. Sin límites.",
+                "badge-fast": "Ultrarrápido",
+                "badge-lang": "99+ Idiomas",
+                "badge-privacy": "100% Privado",
+                download: "Descargar para Mac",
+                "version-note": "Gratis y código abierto",
+                github: "Ver en GitHub",
+                "install-guide": "Guía de Instalación",
+                "how-title": "Cómo funciona",
+                "step1-title": "Presiona el atajo",
+                "step1-desc": "Usa tu atajo personalizable para empezar a grabar",
+                "step2-title": "Habla",
+                "step2-desc": "Observa la forma de onda responder a tu voz",
+                "step3-title": "Suelta",
+                "step3-desc": "El texto se transcribe y pega automáticamente",
+                "feat1-title": "Velocidad Relámpago",
+                "feat1-desc": "Modelos CoreML optimizados ofrecen transcripción instantánea en Apple Silicon.",
+                "feat2-title": "99+ Idiomas",
+                "feat2-desc": "Desde inglés hasta chino, japonés, coreano, español y muchos más.",
+                "feat3-title": "100% Privado",
+                "feat3-desc": "Todo el procesamiento ocurre en el dispositivo. Tu voz nunca sale de tu Mac.",
+                "feat4-title": "Auto-Pegar",
+                "feat4-desc": "El texto transcrito se pega automáticamente donde esté tu cursor.",
+                requires: "Requiere",
+                and: "y",
+                "made-by": "Creado por"
+            }
+        };
+
+        function setLang(lang) {
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.textContent.toLowerCase().includes(lang) ||
+                    (lang === 'zh' && btn.textContent === '中文') ||
+                    (lang === 'ja' && btn.textContent === '日本語') ||
+                    (lang === 'ko' && btn.textContent === '한국어') ||
+                    (lang === 'en' && btn.textContent === 'EN') ||
+                    (lang === 'es' && btn.textContent === 'ES'));
+            });
+
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (translations[lang] && translations[lang][key]) {
+                    el.textContent = translations[lang][key];
+                }
+            });
+
+            document.documentElement.lang = lang;
+            localStorage.setItem('voca-lang', lang);
+        }
+
+        // Load saved language or detect from browser
+        const savedLang = localStorage.getItem('voca-lang');
+        const browserLang = navigator.language.slice(0, 2);
+        const defaultLang = savedLang || (['zh', 'ja', 'ko', 'es'].includes(browserLang) ? browserLang : 'en');
+        setLang(defaultLang);
+    </script>
 </body>
 </html>
