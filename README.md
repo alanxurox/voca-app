@@ -5,7 +5,7 @@
 <h1 align="center">Voca</h1>
 
 <p align="center">
-	<strong>Voice your thoughts.</strong>
+	<strong>Voice Your Thoughts.</strong>
 </p>
 
 <p align="center">
@@ -30,9 +30,9 @@
 
 ---
 
-Turn speech into text instantly. Voca is **100% free**, open source, and runs entirely on your Mac. No cloud. No subscription. No limits.
+Express your ideas at the speed of thought. Just speak, and let your words flow.
 
-Supports 99+ languages with on-device AI. Your voice never leaves your Mac.
+Supports 99+ languages with on-device AI. 100% private—your voice never leaves your Mac.
 
 ## Why Voca?
 
