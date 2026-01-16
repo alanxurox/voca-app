@@ -1,0 +1,33 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show Swift version
+        run: swift --version
+
+      - name: Build
+        run: swift build -c release
+
+      - name: Prepare artifact
+        run: |
+          mkdir -p artifact
+          cp -R .build/release/Voca artifact/
+          cp -R Frameworks/VoicePipeline.framework artifact/
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Voca-build
+          path: artifact/
