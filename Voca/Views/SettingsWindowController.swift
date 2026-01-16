@@ -12,7 +12,7 @@ class SettingsWindowController: NSWindowController {
             backing: .buffered,
             defer: false
         )
-        window.title = "Voca Settings"
+        window.title = NSLocalizedString("Voca Settings", comment: "")
         window.center()
         window.isReleasedWhenClosed = false
 
@@ -56,9 +56,9 @@ class SettingsView: NSView {
 
     private func setupUI() {
         // Create labels and popups
-        let modelLabel = createLabel("Model")
-        let inputLabel = createLabel("Audio Input")
-        let shortcutLabel = createLabel("Shortcut")
+        let modelLabel = createLabel(NSLocalizedString("Model", comment: ""))
+        let inputLabel = createLabel(NSLocalizedString("Audio Input", comment: ""))
+        let shortcutLabel = createLabel(NSLocalizedString("Shortcut", comment: ""))
 
         modelPopup = createPopup()
         inputPopup = createPopup()
@@ -158,7 +158,7 @@ class SettingsView: NSView {
             case .downloaded:
                 title += " (\(model.languageHint))"
             case .error:
-                title += " (Error)"
+                title += " (\(NSLocalizedString("Error", comment: "")))"
             }
 
             modelPopup.addItem(withTitle: title)

@@ -1,0 +1,40 @@
+/* Menu items */
+"Hold %@ to record" = "%@ 길게 눌러 녹음";
+"Double-tap %@ to record" = "%@ 두 번 탭하여 녹음";
+"History" = "기록";
+"Settings..." = "설정...";
+"Check for Updates..." = "업데이트 확인...";
+"About Voca" = "Voca 정보";
+"Quit" = "종료";
+
+/* Settings window */
+"Voca Settings" = "Voca 설정";
+"Model" = "모델";
+"Audio Input" = "오디오 입력";
+"Shortcut" = "단축키";
+
+/* Model status */
+"Error" = "오류";
+
+/* Shortcut presets */
+"Double %@ Option" = "더블 %@ Option";
+"Double %@ Command" = "더블 %@ Command";
+"Double %@ Control" = "더블 %@ Control";
+"%@ Option" = "%@ Option";
+"%@ Option+Shift" = "%@ Option+Shift";
+"%@ Option+Command" = "%@ Option+Command";
+"%@ Control+Option" = "%@ Control+Option";
+
+/* Update dialog */
+"Update Available" = "업데이트 가능";
+"A new version (%@) is available. You are currently running version %@." = "새 버전 (%@)을 사용할 수 있습니다. 현재 버전은 %@입니다.";
+"Download" = "다운로드";
+"Later" = "나중에";
+"You're Up to Date" = "최신 버전입니다";
+"Voca %@ is the latest version." = "Voca %@은(는) 최신 버전입니다.";
+"Update Check Failed" = "업데이트 확인 실패";
+"Could not check for updates: %@" = "업데이트를 확인할 수 없습니다: %@";
+"Could not parse update information." = "업데이트 정보를 분석할 수 없습니다.";
+
+/* Audio input */
+"System Default" = "시스템 기본값";

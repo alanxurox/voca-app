@@ -1,0 +1,40 @@
+/* Menu items */
+"Hold %@ to record" = "%@ を押し続けて録音";
+"Double-tap %@ to record" = "%@ をダブルタップして録音";
+"History" = "履歴";
+"Settings..." = "設定...";
+"Check for Updates..." = "アップデートを確認...";
+"About Voca" = "Voca について";
+"Quit" = "終了";
+
+/* Settings window */
+"Voca Settings" = "Voca 設定";
+"Model" = "モデル";
+"Audio Input" = "オーディオ入力";
+"Shortcut" = "ショートカット";
+
+/* Model status */
+"Error" = "エラー";
+
+/* Shortcut presets */
+"Double %@ Option" = "ダブル %@ Option";
+"Double %@ Command" = "ダブル %@ Command";
+"Double %@ Control" = "ダブル %@ Control";
+"%@ Option" = "%@ Option";
+"%@ Option+Shift" = "%@ Option+Shift";
+"%@ Option+Command" = "%@ Option+Command";
+"%@ Control+Option" = "%@ Control+Option";
+
+/* Update dialog */
+"Update Available" = "アップデートがあります";
+"A new version (%@) is available. You are currently running version %@." = "新しいバージョン (%@) が利用可能です。現在のバージョンは %@ です。";
+"Download" = "ダウンロード";
+"Later" = "後で";
+"You're Up to Date" = "最新版です";
+"Voca %@ is the latest version." = "Voca %@ は最新バージョンです。";
+"Update Check Failed" = "アップデートの確認に失敗しました";
+"Could not check for updates: %@" = "アップデートを確認できませんでした：%@";
+"Could not parse update information." = "アップデート情報を解析できませんでした。";
+
+/* Audio input */
+"System Default" = "システムデフォルト";

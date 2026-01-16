@@ -1,12 +1,15 @@
 import AVFoundation
 import CoreAudio
+import Foundation
 
 struct AudioInputDevice: Equatable, Hashable {
     let id: AudioDeviceID
     let name: String
     let uid: String
 
-    static let systemDefault = AudioInputDevice(id: 0, name: "System Default", uid: "")
+    static var systemDefault: AudioInputDevice {
+        AudioInputDevice(id: 0, name: NSLocalizedString("System Default", comment: ""), uid: "")
+    }
 }
 
 class AudioInputManager {

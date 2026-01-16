@@ -1,0 +1,40 @@
+/* Menu items */
+"Hold %@ to record" = "Hold %@ to record";
+"Double-tap %@ to record" = "Double-tap %@ to record";
+"History" = "History";
+"Settings..." = "Settings...";
+"Check for Updates..." = "Check for Updates...";
+"About Voca" = "About Voca";
+"Quit" = "Quit";
+
+/* Settings window */
+"Voca Settings" = "Voca Settings";
+"Model" = "Model";
+"Audio Input" = "Audio Input";
+"Shortcut" = "Shortcut";
+
+/* Model status */
+"Error" = "Error";
+
+/* Shortcut presets */
+"Double %@ Option" = "Double %@ Option";
+"Double %@ Command" = "Double %@ Command";
+"Double %@ Control" = "Double %@ Control";
+"%@ Option" = "%@ Option";
+"%@ Option+Shift" = "%@ Option+Shift";
+"%@ Option+Command" = "%@ Option+Command";
+"%@ Control+Option" = "%@ Control+Option";
+
+/* Update dialog */
+"Update Available" = "Update Available";
+"A new version (%@) is available. You are currently running version %@." = "A new version (%@) is available. You are currently running version %@.";
+"Download" = "Download";
+"Later" = "Later";
+"You're Up to Date" = "You're Up to Date";
+"Voca %@ is the latest version." = "Voca %@ is the latest version.";
+"Update Check Failed" = "Update Check Failed";
+"Could not check for updates: %@" = "Could not check for updates: %@";
+"Could not parse update information." = "Could not parse update information.";
+
+/* Audio input */
+"System Default" = "System Default";

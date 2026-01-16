@@ -54,15 +54,17 @@ struct Hotkey: Codable, Equatable {
     static let doubleCommand = Hotkey(keyCode: 0xFFFE, modifiers: NSEvent.ModifierFlags.command.rawValue)
     static let doubleControl = Hotkey(keyCode: 0xFFFE, modifiers: NSEvent.ModifierFlags.control.rawValue)
 
-    static let presets: [(name: String, hotkey: Hotkey)] = [
-        ("Double ⌥ Option", doubleOption),
-        ("Double ⌘ Command", doubleCommand),
-        ("Double ⌃ Control", doubleControl),
-        ("⌥ Option", option),
-        ("⌥⇧ Option+Shift", optionShift),
-        ("⌥⌘ Option+Command", optionCommand),
-        ("⌃⌥ Control+Option", controlOption),
-    ]
+    static var presets: [(name: String, hotkey: Hotkey)] {
+        [
+            (String(format: NSLocalizedString("Double %@ Option", comment: ""), "⌥"), doubleOption),
+            (String(format: NSLocalizedString("Double %@ Command", comment: ""), "⌘"), doubleCommand),
+            (String(format: NSLocalizedString("Double %@ Control", comment: ""), "⌃"), doubleControl),
+            (String(format: NSLocalizedString("%@ Option", comment: ""), "⌥"), option),
+            (String(format: NSLocalizedString("%@ Option+Shift", comment: ""), "⌥⇧"), optionShift),
+            (String(format: NSLocalizedString("%@ Option+Command", comment: ""), "⌥⌘"), optionCommand),
+            (String(format: NSLocalizedString("%@ Control+Option", comment: ""), "⌃⌥"), controlOption),
+        ]
+    }
 
     var isDoubleTap: Bool {
         keyCode == 0xFFFE

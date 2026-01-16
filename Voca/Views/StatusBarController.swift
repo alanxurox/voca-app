@@ -45,7 +45,7 @@ class StatusBarController: NSObject {
         menu = NSMenu()
 
         // Hint at top - shows current shortcut
-        hintItem = NSMenuItem(title: "Hold to record", action: nil, keyEquivalent: "")
+        hintItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
         hintItem.isEnabled = false
         updateHintText()
         menu.addItem(hintItem)
@@ -59,22 +59,22 @@ class StatusBarController: NSObject {
         menu.addItem(NSMenuItem.separator())
 
         // Settings
-        let settingsItem = NSMenuItem(title: "Settings...", action: #selector(settingsClicked), keyEquivalent: ",")
+        let settingsItem = NSMenuItem(title: NSLocalizedString("Settings...", comment: ""), action: #selector(settingsClicked), keyEquivalent: ",")
         settingsItem.target = self
         menu.addItem(settingsItem)
 
         // Check for Updates
-        let updateItem = NSMenuItem(title: "Check for Updates...", action: #selector(checkForUpdates), keyEquivalent: "")
+        let updateItem = NSMenuItem(title: NSLocalizedString("Check for Updates...", comment: ""), action: #selector(checkForUpdates), keyEquivalent: "")
         updateItem.target = self
         menu.addItem(updateItem)
 
         // About
-        let aboutItem = NSMenuItem(title: "About Voca", action: #selector(aboutClicked), keyEquivalent: "")
+        let aboutItem = NSMenuItem(title: NSLocalizedString("About Voca", comment: ""), action: #selector(aboutClicked), keyEquivalent: "")
         aboutItem.target = self
         menu.addItem(aboutItem)
 
         // Quit
-        let quitItem = NSMenuItem(title: "Quit", action: #selector(quitClicked), keyEquivalent: "q")
+        let quitItem = NSMenuItem(title: NSLocalizedString("Quit", comment: ""), action: #selector(quitClicked), keyEquivalent: "q")
         quitItem.target = self
         menu.addItem(quitItem)
 
@@ -83,7 +83,7 @@ class StatusBarController: NSObject {
     }
 
     private func createHistoryHeader() -> NSMenuItem {
-        let item = NSMenuItem(title: "History", action: nil, keyEquivalent: "v")
+        let item = NSMenuItem(title: NSLocalizedString("History", comment: ""), action: nil, keyEquivalent: "v")
         item.keyEquivalentModifierMask = [.control, .option]
         item.isEnabled = false
         return item
@@ -108,9 +108,9 @@ class StatusBarController: NSObject {
     private func updateHintText() {
         let hotkey = AppSettings.shared.recordHotkey
         if hotkey.isDoubleTap {
-            hintItem.title = "Double-tap \(hotkey.symbolString) to record"
+            hintItem.title = String(format: NSLocalizedString("Double-tap %@ to record", comment: ""), hotkey.symbolString)
         } else {
-            hintItem.title = "Hold \(hotkey.symbolString) to record"
+            hintItem.title = String(format: NSLocalizedString("Hold %@ to record", comment: ""), hotkey.symbolString)
         }
     }
 
@@ -178,16 +178,16 @@ class StatusBarController: NSObject {
         URLSession.shared.dataTask(with: request) { data, response, error in
             DispatchQueue.main.async {
                 if let error = error {
-                    self.showUpdateAlert(title: "Update Check Failed",
-                                        message: "Could not check for updates: \(error.localizedDescription)")
+                    self.showUpdateAlert(title: NSLocalizedString("Update Check Failed", comment: ""),
+                                        message: String(format: NSLocalizedString("Could not check for updates: %@", comment: ""), error.localizedDescription))
                     return
                 }
 
                 guard let data = data,
                       let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
                       let tagName = json["tag_name"] as? String else {
-                    self.showUpdateAlert(title: "Update Check Failed",
-                                        message: "Could not parse update information.")
+                    self.showUpdateAlert(title: NSLocalizedString("Update Check Failed", comment: ""),
+                                        message: NSLocalizedString("Could not parse update information.", comment: ""))
                     return
                 }
 
@@ -195,11 +195,11 @@ class StatusBarController: NSObject {
 
                 if self.isVersion(latestVersion, newerThan: currentVersion) {
                     let alert = NSAlert()
-                    alert.messageText = "Update Available"
-                    alert.informativeText = "A new version (\(latestVersion)) is available. You are currently running version \(currentVersion)."
+                    alert.messageText = NSLocalizedString("Update Available", comment: "")
+                    alert.informativeText = String(format: NSLocalizedString("A new version (%@) is available. You are currently running version %@.", comment: ""), latestVersion, currentVersion)
                     alert.alertStyle = .informational
-                    alert.addButton(withTitle: "Download")
-                    alert.addButton(withTitle: "Later")
+                    alert.addButton(withTitle: NSLocalizedString("Download", comment: ""))
+                    alert.addButton(withTitle: NSLocalizedString("Later", comment: ""))
 
                     if alert.runModal() == .alertFirstButtonReturn {
                         if let downloadURL = URL(string: "https://github.com/zhengyishen0/voca-app/releases/latest") {
@@ -207,8 +207,8 @@ class StatusBarController: NSObject {
                         }
                     }
                 } else {
-                    self.showUpdateAlert(title: "You're Up to Date",
-                                        message: "Voca \(currentVersion) is the latest version.")
+                    self.showUpdateAlert(title: NSLocalizedString("You're Up to Date", comment: ""),
+                                        message: String(format: NSLocalizedString("Voca %@ is the latest version.", comment: ""), currentVersion))
                 }
             }
         }.resume()

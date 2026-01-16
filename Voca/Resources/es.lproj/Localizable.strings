@@ -1,0 +1,40 @@
+/* Menu items */
+"Hold %@ to record" = "Mantén %@ para grabar";
+"Double-tap %@ to record" = "Doble toque en %@ para grabar";
+"History" = "Historial";
+"Settings..." = "Ajustes...";
+"Check for Updates..." = "Buscar actualizaciones...";
+"About Voca" = "Acerca de Voca";
+"Quit" = "Salir";
+
+/* Settings window */
+"Voca Settings" = "Ajustes de Voca";
+"Model" = "Modelo";
+"Audio Input" = "Entrada de audio";
+"Shortcut" = "Atajo";
+
+/* Model status */
+"Error" = "Error";
+
+/* Shortcut presets */
+"Double %@ Option" = "Doble %@ Opción";
+"Double %@ Command" = "Doble %@ Comando";
+"Double %@ Control" = "Doble %@ Control";
+"%@ Option" = "%@ Opción";
+"%@ Option+Shift" = "%@ Opción+Mayús";
+"%@ Option+Command" = "%@ Opción+Comando";
+"%@ Control+Option" = "%@ Control+Opción";
+
+/* Update dialog */
+"Update Available" = "Actualización disponible";
+"A new version (%@) is available. You are currently running version %@." = "Una nueva versión (%@) está disponible. Actualmente tienes la versión %@.";
+"Download" = "Descargar";
+"Later" = "Más tarde";
+"You're Up to Date" = "Estás actualizado";
+"Voca %@ is the latest version." = "Voca %@ es la última versión.";
+"Update Check Failed" = "Error al buscar actualizaciones";
+"Could not check for updates: %@" = "No se pudo buscar actualizaciones: %@";
+"Could not parse update information." = "No se pudo analizar la información de actualización.";
+
+/* Audio input */
+"System Default" = "Predeterminado del sistema";
