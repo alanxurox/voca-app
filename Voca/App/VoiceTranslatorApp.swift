@@ -210,19 +210,41 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func pasteText(_ text: String) {
+        // Copy to clipboard
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
         pasteboard.setString(text, forType: .string)
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-            let source = CGEventSource(stateID: .hidSystemState)
-            let keyDown = CGEvent(keyboardEventSource: source, virtualKey: 0x09, keyDown: true)
-            let keyUp = CGEvent(keyboardEventSource: source, virtualKey: 0x09, keyDown: false)
-            keyDown?.flags = .maskCommand
-            keyUp?.flags = .maskCommand
-            keyDown?.post(tap: .cghidEventTap)
-            keyUp?.post(tap: .cghidEventTap)
+        // Check accessibility permission
+        guard AXIsProcessTrusted() else {
+            print("⚠️ Accessibility not granted - text copied to clipboard, please paste manually")
+            return
         }
+
+        // Simulate Cmd+V after a delay to ensure focus returns to target app
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            self.simulatePaste()
+        }
+    }
+
+    private func simulatePaste() {
+        // Based on Maccy clipboard manager implementation
+        // https://github.com/p0deje/Maccy/blob/master/Maccy/Clipboard.swift
+        let vKeyCode: CGKeyCode = 0x09  // V key
+
+        let source = CGEventSource(stateID: .hidSystemState)
+
+        let keyDown = CGEvent(keyboardEventSource: source, virtualKey: vKeyCode, keyDown: true)
+        let keyUp = CGEvent(keyboardEventSource: source, virtualKey: vKeyCode, keyDown: false)
+
+        // Command flag with non-coalesced marker (0x000008) as used by Maccy
+        let cmdFlag = CGEventFlags(rawValue: CGEventFlags.maskCommand.rawValue | 0x000008)
+        keyDown?.flags = cmdFlag
+        keyUp?.flags = cmdFlag
+
+        // Post to cgSessionEventTap (not cghidEventTap)
+        keyDown?.post(tap: .cgSessionEventTap)
+        keyUp?.post(tap: .cgSessionEventTap)
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -252,8 +274,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func checkAccessibilityPermission() {
         // Check if accessibility permission is granted (needed to send synthetic keyboard events)
-        let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
-        let trusted = AXIsProcessTrustedWithOptions(options)
+        // Don't prompt automatically - just check and log
+        let trusted = AXIsProcessTrusted()
 
         if !trusted {
             print("⚠️ Accessibility permission required for auto-paste")
