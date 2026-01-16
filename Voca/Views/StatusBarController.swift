@@ -6,12 +6,115 @@ enum RecordingState {
     case processing
 }
 
+// MARK: - Custom View for Model Menu Items
+
+class ModelMenuItemView: NSView {
+    private let leftLabel = NSTextField(labelWithString: "")
+    private let rightLabel = NSTextField(labelWithString: "")
+    private let checkmark = NSTextField(labelWithString: "")
+
+    var isSelected: Bool = false {
+        didSet { checkmark.stringValue = isSelected ? "✓" : "" }
+    }
+
+    var rightText: String = "" {
+        didSet { rightLabel.stringValue = rightText }
+    }
+
+    var onClicked: (() -> Void)?
+
+    private var isHighlighted = false {
+        didSet { needsDisplay = true }
+    }
+
+    init(title: String, width: CGFloat = 250) {
+        // Width matches menu with keyEquivalent column (~250 for alignment with ⌘Q)
+        super.init(frame: NSRect(x: 0, y: 0, width: width, height: 22))
+
+        // Checkmark on the left
+        checkmark.font = NSFont.menuFont(ofSize: 0)
+        checkmark.textColor = .labelColor
+        checkmark.alignment = .left
+        checkmark.isBordered = false
+        checkmark.isEditable = false
+        checkmark.backgroundColor = .clear
+        checkmark.frame = NSRect(x: 6, y: 2, width: 16, height: 18)
+        addSubview(checkmark)
+
+        // Model name
+        leftLabel.stringValue = title
+        leftLabel.font = NSFont.menuFont(ofSize: 0)
+        leftLabel.textColor = .labelColor
+        leftLabel.alignment = .left
+        leftLabel.isBordered = false
+        leftLabel.isEditable = false
+        leftLabel.backgroundColor = .clear
+        leftLabel.frame = NSRect(x: 24, y: 2, width: 120, height: 18)
+        addSubview(leftLabel)
+
+        // Right indicator - positioned to align with keyEquivalent column (⌘Q)
+        rightLabel.font = NSFont.menuFont(ofSize: 0)
+        rightLabel.textColor = .secondaryLabelColor
+        rightLabel.alignment = .right
+        rightLabel.isBordered = false
+        rightLabel.isEditable = false
+        rightLabel.backgroundColor = .clear
+        rightLabel.frame = NSRect(x: width - 45, y: 2, width: 35, height: 18)
+        addSubview(rightLabel)
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override func draw(_ dirtyRect: NSRect) {
+        if isHighlighted {
+            NSColor.selectedContentBackgroundColor.setFill()
+            bounds.fill()
+            leftLabel.textColor = .white
+            checkmark.textColor = .white
+            rightLabel.textColor = .white.withAlphaComponent(0.8)
+        } else {
+            leftLabel.textColor = .labelColor
+            checkmark.textColor = .labelColor
+            rightLabel.textColor = .secondaryLabelColor
+        }
+    }
+
+    override func mouseEntered(with event: NSEvent) {
+        isHighlighted = true
+    }
+
+    override func mouseExited(with event: NSEvent) {
+        isHighlighted = false
+    }
+
+    override func mouseUp(with event: NSEvent) {
+        onClicked?()
+    }
+
+    override func updateTrackingAreas() {
+        super.updateTrackingAreas()
+        for area in trackingAreas {
+            removeTrackingArea(area)
+        }
+        let area = NSTrackingArea(
+            rect: bounds,
+            options: [.mouseEnteredAndExited, .activeInActiveApp],
+            owner: self,
+            userInfo: nil
+        )
+        addTrackingArea(area)
+    }
+}
+
 class StatusBarController: NSObject {
     private var statusItem: NSStatusItem!
     private var menu: NSMenu!
 
-    // Model menu items (for updating state/progress)
+    // Model menu items and views (for updating state/progress)
     private var modelMenuItems: [ASRModel: NSMenuItem] = [:]
+    private var modelMenuViews: [ASRModel: ModelMenuItemView] = [:]
 
     private let onModelChange: (ASRModel) -> Void
     private let historyManager: HistoryManager
@@ -47,8 +150,8 @@ class StatusBarController: NSObject {
     private func setupMenu() {
         menu = NSMenu()
 
-        // Hint at top
-        let hintItem = NSMenuItem(title: "⌘⌘ to record", action: nil, keyEquivalent: "")
+        // Hint at top - show ⌘ on the right
+        let hintItem = NSMenuItem(title: "Double-\u{2318} and hold to record", action: nil, keyEquivalent: "\u{2318}")
         hintItem.isEnabled = false
         menu.addItem(hintItem)
 
@@ -59,17 +162,16 @@ class StatusBarController: NSObject {
         modelsHeader.isEnabled = false
         menu.addItem(modelsHeader)
 
-        // Model items (only available models)
+        // Model items (using custom views to prevent menu dismissal)
         for model in ASRModel.availableModels {
-            let item = NSMenuItem(
-                title: "  \(model.shortName)",
-                action: #selector(modelSelected(_:)),
-                keyEquivalent: ""
-            )
-            item.target = self
-            item.representedObject = model
-            item.indentationLevel = 1
+            let item = NSMenuItem()
+            let view = ModelMenuItemView(title: model.shortName)
+            view.onClicked = { [weak self] in
+                self?.handleModelClick(model)
+            }
+            item.view = view
             modelMenuItems[model] = item
+            modelMenuViews[model] = view
             menu.addItem(item)
         }
 
@@ -101,29 +203,9 @@ class StatusBarController: NSObject {
     }
 
     private func createHistoryHeader() -> NSMenuItem {
-        let item = NSMenuItem(title: "", action: nil, keyEquivalent: "")
+        let item = NSMenuItem(title: "History", action: nil, keyEquivalent: "v")
+        item.keyEquivalentModifierMask = [.control, .option]
         item.isEnabled = false
-
-        // Create attributed string with "History" on left and "⌃⌥V" on right
-        let title = "History"
-        let shortcut = "⌃⌥V"
-
-        let paragraphStyle = NSMutableParagraphStyle()
-        paragraphStyle.tabStops = [NSTextTab(textAlignment: .right, location: 120)]
-
-        let attributed = NSMutableAttributedString(
-            string: "\(title)\t\(shortcut)",
-            attributes: [
-                .font: NSFont.menuFont(ofSize: 0),
-                .paragraphStyle: paragraphStyle
-            ]
-        )
-
-        // Make shortcut gray
-        let shortcutRange = (attributed.string as NSString).range(of: shortcut)
-        attributed.addAttribute(.foregroundColor, value: NSColor.secondaryLabelColor, range: shortcutRange)
-
-        item.attributedTitle = attributed
         return item
     }
 
@@ -136,47 +218,35 @@ class StatusBarController: NSObject {
     }
 
     private func updateModelMenuItem(_ model: ASRModel, status: ModelStatus) {
-        guard let item = modelMenuItems[model] else { return }
+        guard let view = modelMenuViews[model] else { return }
 
         let isSelected = AppSettings.shared.selectedModel == model
+        view.isSelected = isSelected
 
         switch status {
         case .notDownloaded:
-            item.attributedTitle = createModelTitle(model.shortName, rightText: "↓")
-            item.state = isSelected ? .on : .off
-            item.isEnabled = true
-
+            view.rightText = "↓"
         case .downloading(let progress):
             let percent = Int(progress * 100)
-            item.attributedTitle = createModelTitle(model.shortName, rightText: "\(percent)%")
-            item.state = .off
-            item.isEnabled = false
-
+            view.rightText = "\(percent)%"
         case .downloaded:
-            item.title = "  \(model.shortName)"
-            item.attributedTitle = nil
-            item.state = isSelected ? .on : .off
-            item.isEnabled = true
-
-        case .error(let message):
-            item.attributedTitle = createModelTitle(model.shortName, rightText: "✗")
-            item.toolTip = message
-            item.state = isSelected ? .on : .off
-            item.isEnabled = true
+            view.rightText = ""
+        case .error:
+            view.rightText = "✗"
         }
     }
 
-    private func createModelTitle(_ name: String, rightText: String) -> NSAttributedString {
-        let paragraphStyle = NSMutableParagraphStyle()
-        paragraphStyle.tabStops = [NSTextTab(textAlignment: .right, location: 120)]
+    private func handleModelClick(_ model: ASRModel) {
+        // If model not downloaded, start download (menu stays open)
+        if !modelManager.isModelDownloaded(model) {
+            modelManager.downloadModel(model)
+            return
+        }
 
-        return NSAttributedString(
-            string: "  \(name)\t\(rightText)",
-            attributes: [
-                .font: NSFont.menuFont(ofSize: 0),
-                .paragraphStyle: paragraphStyle
-            ]
-        )
+        // Model is downloaded, select it
+        AppSettings.shared.selectedModel = model
+        updateSelectedModel(model)
+        onModelChange(model)
     }
 
     @objc private func aboutClicked() {
@@ -205,24 +275,9 @@ class StatusBarController: NSObject {
     }
 
     func updateSelectedModel(_ model: ASRModel) {
-        for (itemModel, item) in modelMenuItems {
-            item.state = itemModel == model ? .on : .off
+        for (itemModel, view) in modelMenuViews {
+            view.isSelected = itemModel == model
         }
-    }
-
-    @objc private func modelSelected(_ sender: NSMenuItem) {
-        guard let model = sender.representedObject as? ASRModel else { return }
-
-        // If model not downloaded, start download
-        if !modelManager.isModelDownloaded(model) {
-            modelManager.downloadModel(model)
-            return
-        }
-
-        // Model is downloaded, select it
-        AppSettings.shared.selectedModel = model
-        updateSelectedModel(model)
-        onModelChange(model)
     }
 
     @objc private func quitClicked() {
@@ -317,6 +372,38 @@ class StatusBarController: NSObject {
         }
         return false
     }
+
+    /// Truncate string to fit within maxWidth pixels (handles CJK vs Latin width differences)
+    private func truncateToWidth(_ text: String, maxWidth: CGFloat) -> String {
+        let font = NSFont.menuFont(ofSize: 0)
+        let attributes: [NSAttributedString.Key: Any] = [.font: font]
+
+        // Check if full text fits
+        let fullSize = (text as NSString).size(withAttributes: attributes)
+        if fullSize.width <= maxWidth {
+            return text
+        }
+
+        // Binary search for the right length
+        var low = 0
+        var high = text.count
+        var result = ""
+
+        while low < high {
+            let mid = (low + high + 1) / 2
+            let truncated = String(text.prefix(mid))
+            let size = (truncated as NSString).size(withAttributes: attributes)
+
+            if size.width <= maxWidth - 15 { // Leave room for "..."
+                result = truncated
+                low = mid
+            } else {
+                high = mid - 1
+            }
+        }
+
+        return result.isEmpty ? String(text.prefix(10)) : result + "..."
+    }
 }
 
 extension StatusBarController: NSMenuDelegate {
@@ -349,30 +436,27 @@ extension StatusBarController: NSMenuDelegate {
         // Find insertion point (after separator with tag 200)
         guard let separatorIndex = menu.items.firstIndex(where: { $0.tag == 200 }) else { return }
 
-        // Only show history section if there's history
-        if !history.isEmpty {
-            var insertIndex = separatorIndex + 1
+        var insertIndex = separatorIndex + 1
 
-            // Add header
-            let header = createHistoryHeader()
-            header.tag = 204
-            menu.insertItem(header, at: insertIndex)
+        // Always show history header (with right-aligned shortcut)
+        let header = createHistoryHeader()
+        header.tag = 204
+        menu.insertItem(header, at: insertIndex)
+        insertIndex += 1
+
+        // Add history items if any
+        for (i, text) in history.prefix(3).enumerated() {
+            let preview = truncateToWidth(text, maxWidth: 300)
+            let item = NSMenuItem(
+                title: "  \(preview)",
+                action: #selector(historyItemClicked(_:)),
+                keyEquivalent: ""
+            )
+            item.target = self
+            item.representedObject = text
+            item.tag = 201 + i
+            menu.insertItem(item, at: insertIndex)
             insertIndex += 1
-
-            // Add history items
-            for (i, text) in history.prefix(3).enumerated() {
-                let preview = String(text.prefix(35)) + (text.count > 35 ? "..." : "")
-                let item = NSMenuItem(
-                    title: "  \(i + 1). \(preview)",
-                    action: #selector(historyItemClicked(_:)),
-                    keyEquivalent: ""
-                )
-                item.target = self
-                item.representedObject = text
-                item.tag = 201 + i
-                menu.insertItem(item, at: insertIndex)
-                insertIndex += 1
-            }
         }
     }
 }

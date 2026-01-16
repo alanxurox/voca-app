@@ -36,6 +36,12 @@ if [ -d ".build/release/Voca_Voca.bundle/Resources" ]; then
     cp -R ".build/release/Voca_Voca.bundle/Resources/"* "$RESOURCES_DIR/"
 fi
 
+# Copy app icon
+if [ -f "Voca/Resources/AppIcon.icns" ]; then
+    cp "Voca/Resources/AppIcon.icns" "$RESOURCES_DIR/"
+    echo "Copied AppIcon.icns"
+fi
+
 # Create Info.plist
 cat > "$CONTENTS_DIR/Info.plist" << EOF
 <?xml version="1.0" encoding="UTF-8"?>

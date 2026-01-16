@@ -6,9 +6,9 @@ enum ASRModel: String, CaseIterable {
     case whisperTurbo = "whisper"
     case parakeet = "parakeet"
 
-    /// Models shown in the UI (excludes experimental ones)
+    /// Models shown in the UI
     static var availableModels: [ASRModel] {
-        [.senseVoice, .whisperTurbo]
+        [.senseVoice, .whisperTurbo, .parakeet]
     }
 
     var displayName: String {

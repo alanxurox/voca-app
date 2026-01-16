@@ -33,13 +33,15 @@ class ModelManager: NSObject {
     // Model download URLs
     private let modelURLs: [ASRModel: String] = [
         .senseVoice: "https://github.com/zhengyishen0/voca-app/releases/download/models-v1/sensevoice.zip",
-        .whisperTurbo: "https://github.com/zhengyishen0/voca-app/releases/download/models-v1/whisper-turbo.zip"
+        .whisperTurbo: "https://github.com/zhengyishen0/voca-app/releases/download/models-v1/whisper-turbo.zip",
+        .parakeet: "https://github.com/zhengyishen0/voca-app/releases/download/models-v1/parakeet-v2.zip"
     ]
 
     // Model folder names after extraction (must match what ASREngine expects)
     private let modelFolderNames: [ASRModel: String] = [
         .senseVoice: "sensevoice-500-itn.mlmodelc",
-        .whisperTurbo: "whisper-turbo.mlmodelc"  // Not yet available
+        .whisperTurbo: "whisper-turbo",  // WhisperKit format (folder, not .mlmodelc)
+        .parakeet: "parakeet-v2"  // FluidAudio format (folder with multiple models)
     ]
 
     var modelDirectory: URL {
@@ -55,7 +57,7 @@ class ModelManager: NSObject {
     // MARK: - Status Checking
 
     func checkAllModelStatus() {
-        for model in [ASRModel.senseVoice, .whisperTurbo] {
+        for model in ASRModel.availableModels {
             checkModelStatus(model)
         }
     }
