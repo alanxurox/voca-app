@@ -9,10 +9,6 @@
 </p>
 
 <p align="center">
-	<img src="https://img.shields.io/badge/Price-Free_Forever-brightgreen?style=for-the-badge" alt="Free Forever">
-</p>
-
-<p align="center">
 	<a href="https://github.com/zhengyishen0/voca-app/releases/latest">
 		<img src="https://img.shields.io/github/v/release/zhengyishen0/voca-app?style=flat-square&color=blue" alt="Latest Release">
 	</a>
