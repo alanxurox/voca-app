@@ -36,23 +36,23 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Try multiple locations for SPM resource bundle
         // 1. App bundle's Resources folder (for packaged .app)
         if let resourceURL = Bundle.main.resourceURL {
-            let bundlePath = resourceURL.appendingPathComponent("Voca_Voca.bundle")
+            let bundlePath = resourceURL.appendingPathComponent("Voca_VocaLib.bundle")
             if let resourceBundle = Bundle(url: bundlePath),
-               let assetsPath = resourceBundle.resourceURL?.appendingPathComponent("assets").path,
+               let assetsPath = resourceBundle.resourceURL?.appendingPathComponent("Resources/assets").path,
                FileManager.default.fileExists(atPath: assetsPath) {
                 return assetsPath
             }
         }
         // 2. Check next to executable (for development builds)
         let executableURL = Bundle.main.executableURL!.deletingLastPathComponent()
-        let bundlePath = executableURL.appendingPathComponent("Voca_Voca.bundle")
+        let bundlePath = executableURL.appendingPathComponent("Voca_VocaLib.bundle")
         if let resourceBundle = Bundle(url: bundlePath),
-           let assetsPath = resourceBundle.resourceURL?.appendingPathComponent("assets").path,
+           let assetsPath = resourceBundle.resourceURL?.appendingPathComponent("Resources/assets").path,
            FileManager.default.fileExists(atPath: assetsPath) {
             return assetsPath
         }
         // 3. Last resort
-        fatalError("Could not find Voca_Voca.bundle/assets in any expected location")
+        fatalError("Could not find Voca_VocaLib.bundle/Resources/assets in any expected location")
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
