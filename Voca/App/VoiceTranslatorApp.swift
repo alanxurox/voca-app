@@ -298,8 +298,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func checkAccessibilityPermission() {
         // Check if accessibility permission is granted (needed to send synthetic keyboard events)
-        // Don't prompt automatically - just check and log
-        let trusted = AXIsProcessTrusted()
+        // Prompt user if not granted
+        let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
+        let trusted = AXIsProcessTrustedWithOptions(options)
 
         if !trusted {
             print("⚠️ Accessibility permission required for auto-paste")
