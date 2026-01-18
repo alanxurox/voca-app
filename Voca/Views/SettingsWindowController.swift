@@ -1,4 +1,6 @@
 import Cocoa
+import AVFoundation
+import ApplicationServices
 
 class SettingsWindowController: NSWindowController {
     static let shared = SettingsWindowController()
@@ -7,7 +9,7 @@ class SettingsWindowController: NSWindowController {
 
     private init() {
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 450, height: 230),
+            contentRect: NSRect(x: 0, y: 0, width: 450, height: 310),
             styleMask: [.titled, .closable],
             backing: .buffered,
             defer: false
@@ -42,6 +44,10 @@ class SettingsView: NSView {
     private var modelPopup: NSPopUpButton!
     private var inputPopup: NSPopUpButton!
     private var shortcutPopup: NSPopUpButton!
+    private var micStatusLabel: NSTextField!
+    private var micButton: NSButton!
+    private var accessibilityStatusLabel: NSTextField!
+    private var accessibilityButton: NSButton!
 
     private let modelManager = ModelManager.shared
     private let audioInputManager = AudioInputManager.shared
@@ -56,6 +62,18 @@ class SettingsView: NSView {
                 self?.refreshModels()
             }
         }
+
+        // Refresh permissions when app becomes active (e.g., after granting in System Settings)
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(appDidBecomeActive),
+            name: NSApplication.didBecomeActiveNotification,
+            object: nil
+        )
+    }
+
+    @objc private func appDidBecomeActive() {
+        refreshPermissions()
     }
 
     required init?(coder: NSCoder) {
@@ -79,6 +97,25 @@ class SettingsView: NSView {
         inputPopup = createPopup()
         shortcutPopup = createPopup()
 
+        // Permission status - small, subtle, at bottom
+        micStatusLabel = NSTextField(labelWithString: "")
+        micStatusLabel.font = NSFont.systemFont(ofSize: 11)
+        micStatusLabel.textColor = .tertiaryLabelColor
+
+        micButton = NSButton(title: NSLocalizedString("Grant", comment: ""), target: self, action: #selector(openMicrophoneSettings))
+        micButton.bezelStyle = .inline
+        micButton.controlSize = .small
+        micButton.font = NSFont.systemFont(ofSize: 10)
+
+        accessibilityStatusLabel = NSTextField(labelWithString: "")
+        accessibilityStatusLabel.font = NSFont.systemFont(ofSize: 11)
+        accessibilityStatusLabel.textColor = .tertiaryLabelColor
+
+        accessibilityButton = NSButton(title: NSLocalizedString("Grant", comment: ""), target: self, action: #selector(openAccessibilitySettings))
+        accessibilityButton.bezelStyle = .inline
+        accessibilityButton.controlSize = .small
+        accessibilityButton.font = NSFont.systemFont(ofSize: 10)
+
         // Add to view
         addSubview(hintLabel)
         addSubview(modelLabel)
@@ -87,6 +124,10 @@ class SettingsView: NSView {
         addSubview(inputPopup)
         addSubview(shortcutLabel)
         addSubview(shortcutPopup)
+        addSubview(micStatusLabel)
+        addSubview(micButton)
+        addSubview(accessibilityStatusLabel)
+        addSubview(accessibilityButton)
 
         // Layout with Auto Layout
         hintLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -96,6 +137,10 @@ class SettingsView: NSView {
         inputPopup.translatesAutoresizingMaskIntoConstraints = false
         shortcutLabel.translatesAutoresizingMaskIntoConstraints = false
         shortcutPopup.translatesAutoresizingMaskIntoConstraints = false
+        micStatusLabel.translatesAutoresizingMaskIntoConstraints = false
+        micButton.translatesAutoresizingMaskIntoConstraints = false
+        accessibilityStatusLabel.translatesAutoresizingMaskIntoConstraints = false
+        accessibilityButton.translatesAutoresizingMaskIntoConstraints = false
 
         NSLayoutConstraint.activate([
             // Hint label (above model row)
@@ -129,6 +174,19 @@ class SettingsView: NSView {
             shortcutPopup.leadingAnchor.constraint(equalTo: shortcutLabel.trailingAnchor, constant: 10),
             shortcutPopup.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -20),
             shortcutPopup.centerYAnchor.constraint(equalTo: shortcutLabel.centerYAnchor),
+
+            // Permissions at bottom right corner - subtle and compact
+            accessibilityStatusLabel.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -20),
+            accessibilityStatusLabel.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -15),
+
+            accessibilityButton.trailingAnchor.constraint(equalTo: accessibilityStatusLabel.leadingAnchor, constant: -4),
+            accessibilityButton.centerYAnchor.constraint(equalTo: accessibilityStatusLabel.centerYAnchor),
+
+            micStatusLabel.trailingAnchor.constraint(equalTo: accessibilityButton.leadingAnchor, constant: -12),
+            micStatusLabel.centerYAnchor.constraint(equalTo: accessibilityStatusLabel.centerYAnchor),
+
+            micButton.trailingAnchor.constraint(equalTo: micStatusLabel.leadingAnchor, constant: -4),
+            micButton.centerYAnchor.constraint(equalTo: micStatusLabel.centerYAnchor),
         ])
 
         // Set actions
@@ -159,6 +217,7 @@ class SettingsView: NSView {
         refreshModels()
         refreshInputDevices()
         refreshShortcuts()
+        refreshPermissions()
     }
 
     // MARK: - Models
@@ -257,6 +316,66 @@ class SettingsView: NSView {
     @objc private func shortcutChanged(_ sender: NSPopUpButton) {
         guard let hotkey = sender.selectedItem?.representedObject as? Hotkey else { return }
         AppSettings.shared.recordHotkey = hotkey
+    }
+
+    // MARK: - Permissions
+
+    private func refreshPermissions() {
+        // Microphone permission
+        let micStatus = AVCaptureDevice.authorizationStatus(for: .audio)
+        switch micStatus {
+        case .authorized:
+            micStatusLabel.stringValue = NSLocalizedString("Mic ✓", comment: "")
+            micStatusLabel.textColor = .tertiaryLabelColor
+            micButton.isHidden = true
+        case .notDetermined:
+            micStatusLabel.stringValue = NSLocalizedString("Mic", comment: "")
+            micStatusLabel.textColor = .secondaryLabelColor
+            micButton.isHidden = false
+        default:
+            micStatusLabel.stringValue = NSLocalizedString("Mic", comment: "")
+            micStatusLabel.textColor = .systemOrange
+            micButton.isHidden = false
+        }
+
+        // Accessibility permission
+        let accessibilityGranted = AXIsProcessTrusted()
+        if accessibilityGranted {
+            accessibilityStatusLabel.stringValue = NSLocalizedString("Accessibility ✓", comment: "")
+            accessibilityStatusLabel.textColor = .tertiaryLabelColor
+            accessibilityButton.isHidden = true
+        } else {
+            accessibilityStatusLabel.stringValue = NSLocalizedString("Accessibility", comment: "")
+            accessibilityStatusLabel.textColor = .systemOrange
+            accessibilityButton.isHidden = false
+        }
+    }
+
+    @objc private func openMicrophoneSettings() {
+        let micStatus = AVCaptureDevice.authorizationStatus(for: .audio)
+        if micStatus == .notDetermined {
+            AVCaptureDevice.requestAccess(for: .audio) { [weak self] _ in
+                DispatchQueue.main.async {
+                    self?.refreshPermissions()
+                }
+            }
+        } else {
+            // Open System Settings > Privacy > Microphone
+            if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone") {
+                NSWorkspace.shared.open(url)
+            }
+        }
+    }
+
+    @objc private func openAccessibilitySettings() {
+        // Prompt for accessibility permission
+        let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
+        AXIsProcessTrustedWithOptions(options)
+
+        // Also open System Settings > Privacy > Accessibility
+        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
+            NSWorkspace.shared.open(url)
+        }
     }
 }
 

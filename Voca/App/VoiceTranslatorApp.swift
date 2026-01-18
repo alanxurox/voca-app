@@ -1,6 +1,7 @@
 import Cocoa
 import VoicePipeline
 import ApplicationServices
+import AVFoundation
 
 private var appDelegateRef: AppDelegate?
 
@@ -106,6 +107,42 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         print("Double-tap ⌘ to record, release to transcribe")
         print("ESC to cancel | ⌃⌥V for history")
         print("─────────────────────────────────────")
+
+        // Check if any model is downloaded, open Settings if not
+        checkModelAndShowSettingsIfNeeded()
+
+        // Check microphone permission
+        checkMicrophonePermission()
+    }
+
+    private func checkModelAndShowSettingsIfNeeded() {
+        if !ModelManager.shared.isAnyModelDownloaded() {
+            print("⚠️ No model downloaded, auto-downloading SenseVoice...")
+            // Auto-download SenseVoice (smallest model) on first launch
+            ModelManager.shared.downloadModel(.senseVoice)
+            // Also show settings so user can see progress
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                SettingsWindowController.shared.show()
+            }
+        }
+    }
+
+    private func checkMicrophonePermission() {
+        switch AVCaptureDevice.authorizationStatus(for: .audio) {
+        case .notDetermined:
+            AVCaptureDevice.requestAccess(for: .audio) { granted in
+                if !granted {
+                    print("⚠️ Microphone permission denied")
+                }
+            }
+        case .denied, .restricted:
+            print("⚠️ Microphone permission required for recording")
+            print("  Please enable in System Settings > Privacy & Security > Microphone")
+        case .authorized:
+            break
+        @unknown default:
+            break
+        }
     }
 
     private func startRecording() {

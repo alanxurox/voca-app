@@ -32,20 +32,108 @@ class Transcriber {
             return TranscriptionResult(text: nil, modelTime: 0)
         }
 
-        // Convert Swift [Float] to KotlinFloatArray
-        let kotlinArray = KotlinFloatArray(size: Int32(audioSamples.count))
-        for (index, sample) in audioSamples.enumerated() {
-            kotlinArray.set(index: Int32(index), value: sample)
-        }
-
         let modelStart = Date()
 
-        // Call KMP ASREngine directly (no subprocess!)
-        let text = engine.transcribe(audio: kotlinArray)
+        // For short audio (< 60 seconds), transcribe directly
+        let sampleRate = 16000
+        let maxChunkSamples = 60 * sampleRate  // 60 seconds max per chunk
+
+        if audioSamples.count <= maxChunkSamples {
+            let text = transcribeChunk(audioSamples)
+            let modelTime = Date().timeIntervalSince(modelStart)
+            return TranscriptionResult(text: text, modelTime: modelTime)
+        }
+
+        // For longer audio, use VAD-based chunking
+        let chunks = splitAudioByVAD(audioSamples, sampleRate: sampleRate, maxChunkSamples: maxChunkSamples)
+
+        var results: [String] = []
+        for chunk in chunks {
+            if let text = transcribeChunk(chunk), !text.isEmpty {
+                results.append(text)
+            }
+        }
 
         let modelTime = Date().timeIntervalSince(modelStart)
+        let combinedText = results.joined(separator: " ")
 
-        return TranscriptionResult(text: text, modelTime: modelTime)
+        return TranscriptionResult(text: combinedText.isEmpty ? nil : combinedText, modelTime: modelTime)
+    }
+
+    private func transcribeChunk(_ samples: [Float]) -> String? {
+        let kotlinArray = KotlinFloatArray(size: Int32(samples.count))
+        for (index, sample) in samples.enumerated() {
+            kotlinArray.set(index: Int32(index), value: sample)
+        }
+        return engine.transcribe(audio: kotlinArray)
+    }
+
+    /// Split audio into chunks using energy-based VAD (Voice Activity Detection)
+    private func splitAudioByVAD(_ samples: [Float], sampleRate: Int, maxChunkSamples: Int) -> [[Float]] {
+        let minSilenceSamples = Int(0.3 * Double(sampleRate))  // 300ms minimum silence
+        let minChunkSamples = sampleRate  // 1 second minimum chunk
+        let windowSize = Int(0.025 * Double(sampleRate))  // 25ms window for energy calculation
+        let energyThreshold: Float = 0.01  // Silence threshold
+
+        var chunks: [[Float]] = []
+        var currentChunkStart = 0
+        var silenceStart: Int? = nil
+
+        var i = 0
+        while i < samples.count {
+            // Calculate energy for this window
+            let windowEnd = min(i + windowSize, samples.count)
+            var energy: Float = 0
+            for j in i..<windowEnd {
+                energy += samples[j] * samples[j]
+            }
+            energy /= Float(windowEnd - i)
+
+            let isSilence = energy < energyThreshold
+
+            if isSilence {
+                if silenceStart == nil {
+                    silenceStart = i
+                }
+            } else {
+                if let start = silenceStart {
+                    let silenceLength = i - start
+                    let chunkLength = i - currentChunkStart
+
+                    // If we have enough silence and a reasonable chunk, split here
+                    if silenceLength >= minSilenceSamples && chunkLength >= minChunkSamples {
+                        let splitPoint = start + silenceLength / 2  // Split in middle of silence
+                        let chunk = Array(samples[currentChunkStart..<splitPoint])
+                        chunks.append(chunk)
+                        currentChunkStart = splitPoint
+                    }
+                }
+                silenceStart = nil
+            }
+
+            // Force split if chunk is too long (for continuous speech)
+            let chunkLength = i - currentChunkStart
+            if chunkLength >= maxChunkSamples {
+                // Try to find a recent silence point, or just split
+                let chunk = Array(samples[currentChunkStart..<i])
+                chunks.append(chunk)
+                currentChunkStart = i
+                silenceStart = nil
+            }
+
+            i += windowSize
+        }
+
+        // Add remaining samples as final chunk
+        if currentChunkStart < samples.count {
+            let chunk = Array(samples[currentChunkStart...])
+            if chunk.count >= minChunkSamples / 2 {  // Only add if meaningful
+                chunks.append(chunk)
+            }
+        }
+
+        print("📊 Split audio into \(chunks.count) chunks")
+        return chunks
     }
 
     /// Load WAV/M4A audio file and convert to 16kHz mono float samples

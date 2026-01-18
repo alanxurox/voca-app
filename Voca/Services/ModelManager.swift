@@ -80,6 +80,10 @@ class ModelManager: NSObject {
         return modelStatus[model] == .downloaded
     }
 
+    func isAnyModelDownloaded() -> Bool {
+        return modelStatus.values.contains(.downloaded)
+    }
+
     // MARK: - Download
 
     func downloadModel(_ model: ASRModel) {
