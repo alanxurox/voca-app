@@ -62,9 +62,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Set app icon (waveform.circle.fill)
         setAppIcon()
 
-        // Check accessibility permissions (needed for auto-paste)
-        checkAccessibilityPermission()
-
         // Initialize ASR engine (loads CoreML models once at startup)
         print("Loading ASR models...")
         let loadStart = Date()
@@ -108,40 +105,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         print("ESC to cancel | ⌃⌥V for history")
         print("─────────────────────────────────────")
 
-        // Check if any model is downloaded, open Settings if not
-        checkModelAndShowSettingsIfNeeded()
-
-        // Check microphone permission
-        checkMicrophonePermission()
+        // Show onboarding if first launch or no model downloaded
+        checkAndShowOnboarding()
     }
 
-    private func checkModelAndShowSettingsIfNeeded() {
-        if !ModelManager.shared.isAnyModelDownloaded() {
-            print("⚠️ No model downloaded, auto-downloading SenseVoice...")
-            // Auto-download SenseVoice (smallest model) on first launch
-            ModelManager.shared.downloadModel(.senseVoice)
-            // Also show settings so user can see progress
+    private func checkAndShowOnboarding() {
+        if OnboardingWindowController.shouldShowOnboarding() {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                SettingsWindowController.shared.show()
+                OnboardingWindowController.shared.show()
             }
-        }
-    }
-
-    private func checkMicrophonePermission() {
-        switch AVCaptureDevice.authorizationStatus(for: .audio) {
-        case .notDetermined:
-            AVCaptureDevice.requestAccess(for: .audio) { granted in
-                if !granted {
-                    print("⚠️ Microphone permission denied")
-                }
-            }
-        case .denied, .restricted:
-            print("⚠️ Microphone permission required for recording")
-            print("  Please enable in System Settings > Privacy & Security > Microphone")
-        case .authorized:
-            break
-        @unknown default:
-            break
         }
     }
 
@@ -151,6 +123,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         if !ModelManager.shared.isModelDownloaded(selectedModel) {
             print("⚠️ Model not downloaded, opening settings...")
             SettingsWindowController.shared.show()
+            return
+        }
+
+        // Check permissions - show onboarding permission page if not granted
+        let micStatus = AVCaptureDevice.authorizationStatus(for: .audio)
+        let accessibilityGranted = AXIsProcessTrusted()
+
+        if micStatus != .authorized || !accessibilityGranted {
+            print("⚠️ Permissions required, showing onboarding...")
+            OnboardingWindowController.shared.showPermissionsStep()
             return
         }
 
@@ -330,18 +312,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 icon.unlockFocus()
                 NSApp.applicationIconImage = icon
             }
-        }
-    }
-
-    private func checkAccessibilityPermission() {
-        // Check if accessibility permission is granted (needed to send synthetic keyboard events)
-        // Prompt user if not granted
-        let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
-        let trusted = AXIsProcessTrustedWithOptions(options)
-
-        if !trusted {
-            print("⚠️ Accessibility permission required for auto-paste")
-            print("  Please enable in System Settings > Privacy & Security > Accessibility")
         }
     }
 }

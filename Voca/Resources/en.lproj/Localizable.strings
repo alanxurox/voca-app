@@ -9,9 +9,44 @@
 
 /* Settings window */
 "Voca Settings" = "Voca Settings";
-"Model" = "Model";
-"Audio Input" = "Audio Input";
+"Language" = "Language";
+"Microphone" = "Microphone";
 "Shortcut" = "Shortcut";
+"Accessibility" = "Accessibility";
+"Grant" = "Grant";
+"Downloading speech recognition model..." = "Downloading speech recognition model...";
+
+/* Language options */
+"English Only" = "English Only";
+"中文, English, 日本語, 한국어, 粵語" = "中文, English, 日本語, 한국어, 粵語";
+"Español, Français, Deutsch, and Global" = "Español, Français, Deutsch, and Global";
+
+/* Onboarding */
+"Welcome to Voca" = "Welcome to Voca";
+"Choose Your Language" = "Choose Your Language";
+"Select the primary language you'll use for dictation.\nThis helps us download the right speech recognition model." = "Select the primary language you'll use for dictation.\nThis helps us download the right speech recognition model.";
+"Choose your language..." = "Choose your language...";
+"Grant Permissions" = "Grant Permissions";
+"Voca needs these permissions to work properly." = "Voca needs these permissions to work properly.";
+"Required to record your voice" = "Required to record your voice";
+"Required to auto-paste transcribed text" = "Required to auto-paste transcribed text";
+"How to Use Voca" = "How to Use Voca";
+"Recording Shortcut" = "Recording Shortcut";
+"Choose a shortcut to start recording.\nRelease to transcribe and paste." = "Choose a shortcut to start recording.\nRelease to transcribe and paste.";
+"Double-tap the key quickly to start recording." = "Double-tap the key quickly to start recording.";
+"Hold the key to record, release to transcribe." = "Hold the key to record, release to transcribe.";
+"You can change this in Settings anytime." = "You can change this in Settings anytime.";
+"Transcription History" = "Transcription History";
+"Access your recent transcriptions from the menu bar." = "Access your recent transcriptions from the menu bar.";
+"Click any item to copy it, or press ⌃⌥V to paste the last transcription." = "Click any item to copy it, or press ⌃⌥V to paste the last transcription.";
+"Downloading Model" = "Downloading Model";
+"Please wait while we download the speech recognition model.\nThis may take a few minutes depending on your connection." = "Please wait while we download the speech recognition model.\nThis may take a few minutes depending on your connection.";
+"You're All Set!" = "You're All Set!";
+"Voca is ready to use!\n\nPress %@ to start dictating." = "Voca is ready to use!\n\nPress %@ to start dictating.";
+"Back" = "Back";
+"Next" = "Next";
+"Skip" = "Skip";
+"Done" = "Done";
 
 /* Model status */
 "Error" = "Error";

@@ -9,9 +9,44 @@
 
 /* Settings window */
 "Voca Settings" = "Ajustes de Voca";
-"Model" = "Modelo";
-"Audio Input" = "Entrada de audio";
+"Language" = "Idioma";
+"Microphone" = "Micrófono";
 "Shortcut" = "Atajo";
+"Accessibility" = "Accesibilidad";
+"Grant" = "Permitir";
+"Downloading speech recognition model..." = "Descargando modelo de reconocimiento de voz...";
+
+/* Language options */
+"English Only" = "Solo inglés";
+"中文, English, 日本語, 한국어, 粵語" = "中文, English, 日本語, 한국어, 粵語";
+"Español, Français, Deutsch, and Global" = "Español, Français, Deutsch y Global";
+
+/* Onboarding */
+"Welcome to Voca" = "Bienvenido a Voca";
+"Choose Your Language" = "Elige tu idioma";
+"Select the primary language you'll use for dictation.\nThis helps us download the right speech recognition model." = "Selecciona el idioma principal que usarás para dictar.\nEsto nos ayuda a descargar el modelo de reconocimiento de voz correcto.";
+"Choose your language..." = "Elige tu idioma...";
+"Grant Permissions" = "Conceder permisos";
+"Voca needs these permissions to work properly." = "Voca necesita estos permisos para funcionar correctamente.";
+"Required to record your voice" = "Necesario para grabar tu voz";
+"Required to auto-paste transcribed text" = "Necesario para pegar automáticamente el texto transcrito";
+"How to Use Voca" = "Cómo usar Voca";
+"Recording Shortcut" = "Atajo de grabación";
+"Choose a shortcut to start recording.\nRelease to transcribe and paste." = "Elige un atajo para empezar a grabar.\nSuelta para transcribir y pegar.";
+"Double-tap the key quickly to start recording." = "Pulsa dos veces rápidamente para empezar a grabar.";
+"Hold the key to record, release to transcribe." = "Mantén pulsado para grabar, suelta para transcribir.";
+"You can change this in Settings anytime." = "Puedes cambiarlo en Ajustes en cualquier momento.";
+"Transcription History" = "Historial de transcripciones";
+"Access your recent transcriptions from the menu bar." = "Accede a tus transcripciones recientes desde la barra de menús.";
+"Click any item to copy it, or press ⌃⌥V to paste the last transcription." = "Haz clic en cualquier elemento para copiarlo, o pulsa ⌃⌥V para pegar la última transcripción.";
+"Downloading Model" = "Descargando modelo";
+"Please wait while we download the speech recognition model.\nThis may take a few minutes depending on your connection." = "Por favor espera mientras descargamos el modelo de reconocimiento de voz.\nEsto puede tardar unos minutos según tu conexión.";
+"You're All Set!" = "¡Todo listo!";
+"Voca is ready to use!\n\nPress %@ to start dictating." = "¡Voca está listo para usar!\n\nPulsa %@ para empezar a dictar.";
+"Back" = "Atrás";
+"Next" = "Siguiente";
+"Skip" = "Omitir";
+"Done" = "Hecho";
 
 /* Model status */
 "Error" = "Error";

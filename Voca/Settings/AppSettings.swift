@@ -6,34 +6,33 @@ enum ASRModel: String, CaseIterable {
     case whisperTurbo = "whisper"
     case parakeet = "parakeet"
 
-    /// Models shown in the UI
+    /// Models shown in the UI - ordered by recommendation
     static var availableModels: [ASRModel] {
         [.senseVoice, .whisperTurbo, .parakeet]
     }
 
-    var displayName: String {
+    /// User-friendly language option title
+    var languageOption: String {
         switch self {
-        case .senseVoice: return "SenseVoice (zh/en/ja/ko)"
-        case .whisperTurbo: return "Whisper Turbo (99 langs)"
-        case .parakeet: return "Parakeet (en only)"
+        case .parakeet: return NSLocalizedString("English Only", comment: "")
+        case .senseVoice: return NSLocalizedString("中文, English, 日本語, 한국어, 粵語", comment: "")
+        case .whisperTurbo: return NSLocalizedString("Español, Français, Deutsch, and Global", comment: "")
         }
     }
 
-    var shortName: String {
+    /// Short description for the dropdown
+    var shortDescription: String {
         switch self {
-        case .senseVoice: return "SenseVoice"
-        case .whisperTurbo: return "Whisper"
-        case .parakeet: return "Parakeet"
+        case .parakeet: return NSLocalizedString("Best accuracy for English", comment: "")
+        case .senseVoice: return NSLocalizedString("Asian languages + English", comment: "")
+        case .whisperTurbo: return NSLocalizedString("99 languages supported", comment: "")
         }
     }
 
-    var languageHint: String {
-        switch self {
-        case .senseVoice: return "中/En/日/한/粤"
-        case .whisperTurbo: return "Multi-Language"
-        case .parakeet: return "Best for English"
-        }
-    }
+    // Legacy properties for compatibility
+    var displayName: String { languageOption }
+    var shortName: String { languageOption }
+    var languageHint: String { shortDescription }
 }
 
 struct Hotkey: Codable, Equatable {

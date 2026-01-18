@@ -9,9 +9,44 @@
 
 /* Settings window */
 "Voca Settings" = "Voca 設定";
-"Model" = "モデル";
-"Audio Input" = "オーディオ入力";
+"Language" = "言語";
+"Microphone" = "マイク";
 "Shortcut" = "ショートカット";
+"Accessibility" = "アクセシビリティ";
+"Grant" = "許可";
+"Downloading speech recognition model..." = "音声認識モデルをダウンロード中...";
+
+/* Language options */
+"English Only" = "英語のみ";
+"中文, English, 日本語, 한국어, 粵語" = "中文, English, 日本語, 한국어, 粵語";
+"Español, Français, Deutsch, and Global" = "Español, Français, Deutsch, その他";
+
+/* Onboarding */
+"Welcome to Voca" = "Voca へようこそ";
+"Choose Your Language" = "言語を選択";
+"Select the primary language you'll use for dictation.\nThis helps us download the right speech recognition model." = "音声入力で主に使用する言語を選択してください。\n適切な音声認識モデルをダウンロードします。";
+"Choose your language..." = "言語を選択...";
+"Grant Permissions" = "権限を許可";
+"Voca needs these permissions to work properly." = "Voca が正常に動作するには、これらの権限が必要です。";
+"Required to record your voice" = "音声を録音するために必要です";
+"Required to auto-paste transcribed text" = "テキストを自動ペーストするために必要です";
+"How to Use Voca" = "Voca の使い方";
+"Recording Shortcut" = "録音ショートカット";
+"Choose a shortcut to start recording.\nRelease to transcribe and paste." = "録音を開始するショートカットを選択。\n離すと文字起こしして貼り付けます。";
+"Double-tap the key quickly to start recording." = "キーをすばやくダブルタップして録音開始。";
+"Hold the key to record, release to transcribe." = "キーを押し続けて録音、離して文字起こし。";
+"You can change this in Settings anytime." = "設定でいつでも変更できます。";
+"Transcription History" = "文字起こし履歴";
+"Access your recent transcriptions from the menu bar." = "メニューバーから最近の文字起こしにアクセス。";
+"Click any item to copy it, or press ⌃⌥V to paste the last transcription." = "項目をクリックしてコピー、または ⌃⌥V で前回の文字起こしを貼り付け。";
+"Downloading Model" = "モデルをダウンロード中";
+"Please wait while we download the speech recognition model.\nThis may take a few minutes depending on your connection." = "音声認識モデルをダウンロードしています。\n接続状況により数分かかる場合があります。";
+"You're All Set!" = "準備完了！";
+"Voca is ready to use!\n\nPress %@ to start dictating." = "Voca を使う準備ができました！\n\n%@ を押して音声入力を開始。";
+"Back" = "戻る";
+"Next" = "次へ";
+"Skip" = "スキップ";
+"Done" = "完了";
 
 /* Model status */
 "Error" = "エラー";

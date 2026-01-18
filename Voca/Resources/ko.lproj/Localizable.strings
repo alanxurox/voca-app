@@ -9,9 +9,44 @@
 
 /* Settings window */
 "Voca Settings" = "Voca 설정";
-"Model" = "모델";
-"Audio Input" = "오디오 입력";
+"Language" = "언어";
+"Microphone" = "마이크";
 "Shortcut" = "단축키";
+"Accessibility" = "손쉬운 사용";
+"Grant" = "허용";
+"Downloading speech recognition model..." = "음성 인식 모델 다운로드 중...";
+
+/* Language options */
+"English Only" = "영어만";
+"中文, English, 日本語, 한국어, 粵語" = "中文, English, 日本語, 한국어, 粵語";
+"Español, Français, Deutsch, and Global" = "Español, Français, Deutsch 및 기타";
+
+/* Onboarding */
+"Welcome to Voca" = "Voca에 오신 것을 환영합니다";
+"Choose Your Language" = "언어 선택";
+"Select the primary language you'll use for dictation.\nThis helps us download the right speech recognition model." = "음성 입력에 주로 사용할 언어를 선택하세요.\n적절한 음성 인식 모델을 다운로드합니다.";
+"Choose your language..." = "언어 선택...";
+"Grant Permissions" = "권한 허용";
+"Voca needs these permissions to work properly." = "Voca가 제대로 작동하려면 이러한 권한이 필요합니다.";
+"Required to record your voice" = "음성 녹음에 필요합니다";
+"Required to auto-paste transcribed text" = "텍스트 자동 붙여넣기에 필요합니다";
+"How to Use Voca" = "Voca 사용법";
+"Recording Shortcut" = "녹음 단축키";
+"Choose a shortcut to start recording.\nRelease to transcribe and paste." = "녹음을 시작할 단축키를 선택하세요.\n놓으면 텍스트로 변환하여 붙여넣습니다.";
+"Double-tap the key quickly to start recording." = "키를 빠르게 두 번 눌러 녹음을 시작합니다.";
+"Hold the key to record, release to transcribe." = "키를 누르고 있으면 녹음, 놓으면 변환합니다.";
+"You can change this in Settings anytime." = "설정에서 언제든지 변경할 수 있습니다.";
+"Transcription History" = "변환 기록";
+"Access your recent transcriptions from the menu bar." = "메뉴 바에서 최근 변환 기록에 접근하세요.";
+"Click any item to copy it, or press ⌃⌥V to paste the last transcription." = "항목을 클릭하여 복사하거나, ⌃⌥V를 눌러 마지막 변환을 붙여넣으세요.";
+"Downloading Model" = "모델 다운로드 중";
+"Please wait while we download the speech recognition model.\nThis may take a few minutes depending on your connection." = "음성 인식 모델을 다운로드하고 있습니다.\n연결 상태에 따라 몇 분 정도 걸릴 수 있습니다.";
+"You're All Set!" = "준비 완료!";
+"Voca is ready to use!\n\nPress %@ to start dictating." = "Voca를 사용할 준비가 되었습니다!\n\n%@을(를) 눌러 음성 입력을 시작하세요.";
+"Back" = "뒤로";
+"Next" = "다음";
+"Skip" = "건너뛰기";
+"Done" = "완료";
 
 /* Model status */
 "Error" = "오류";

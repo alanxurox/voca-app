@@ -9,9 +9,44 @@
 
 /* Settings window */
 "Voca Settings" = "Voca 设置";
-"Model" = "模型";
-"Audio Input" = "音频输入";
+"Language" = "语言";
+"Microphone" = "麦克风";
 "Shortcut" = "快捷键";
+"Accessibility" = "辅助功能";
+"Grant" = "授权";
+"Downloading speech recognition model..." = "正在下载语音识别模型...";
+
+/* Language options */
+"English Only" = "仅英语";
+"中文, English, 日本語, 한국어, 粵語" = "中文, English, 日本語, 한국어, 粵語";
+"Español, Français, Deutsch, and Global" = "Español, Français, Deutsch 及全球语言";
+
+/* Onboarding */
+"Welcome to Voca" = "欢迎使用 Voca";
+"Choose Your Language" = "选择您的语言";
+"Select the primary language you'll use for dictation.\nThis helps us download the right speech recognition model." = "选择您主要使用的语言进行听写。\n这将帮助我们下载正确的语音识别模型。";
+"Choose your language..." = "选择语言...";
+"Grant Permissions" = "授予权限";
+"Voca needs these permissions to work properly." = "Voca 需要以下权限才能正常工作。";
+"Required to record your voice" = "需要此权限来录制您的声音";
+"Required to auto-paste transcribed text" = "需要此权限来自动粘贴转录文本";
+"How to Use Voca" = "如何使用 Voca";
+"Recording Shortcut" = "录音快捷键";
+"Choose a shortcut to start recording.\nRelease to transcribe and paste." = "选择开始录音的快捷键。\n松开后自动转录并粘贴。";
+"Double-tap the key quickly to start recording." = "快速双击按键开始录音。";
+"Hold the key to record, release to transcribe." = "按住录音，松开转录。";
+"You can change this in Settings anytime." = "您可以随时在设置中更改。";
+"Transcription History" = "转录历史";
+"Access your recent transcriptions from the menu bar." = "从菜单栏访问最近的转录记录。";
+"Click any item to copy it, or press ⌃⌥V to paste the last transcription." = "点击任意条目复制，或按 ⌃⌥V 粘贴上次转录。";
+"Downloading Model" = "正在下载模型";
+"Please wait while we download the speech recognition model.\nThis may take a few minutes depending on your connection." = "正在下载语音识别模型，请稍候。\n根据您的网络状况，这可能需要几分钟。";
+"You're All Set!" = "设置完成！";
+"Voca is ready to use!\n\nPress %@ to start dictating." = "Voca 已准备就绪！\n\n按下 %@ 开始听写。";
+"Back" = "返回";
+"Next" = "下一步";
+"Skip" = "跳过";
+"Done" = "完成";
 
 /* Model status */
 "Error" = "错误";
