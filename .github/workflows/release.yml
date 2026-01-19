@@ -68,6 +68,35 @@ jobs:
           codesign --verify --deep --strict build/Voca.xcarchive/Products/Applications/Voca.app
           echo "Build and signing completed successfully"
 
+      - name: Re-sign Sparkle binaries for notarization
+        env:
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          APP_PATH="build/Voca.xcarchive/Products/Applications/Voca.app"
+          SPARKLE_PATH="$APP_PATH/Contents/Frameworks/Sparkle.framework"
+          IDENTITY="Developer ID Application: Zhengyi Shen ($APPLE_TEAM_ID)"
+
+          # Re-sign Sparkle XPC services and binaries with timestamp
+          codesign --force --options runtime --timestamp --sign "$IDENTITY" \
+            "$SPARKLE_PATH/Versions/B/XPCServices/Downloader.xpc/Contents/MacOS/Downloader"
+          codesign --force --options runtime --timestamp --sign "$IDENTITY" \
+            "$SPARKLE_PATH/Versions/B/XPCServices/Downloader.xpc"
+          codesign --force --options runtime --timestamp --sign "$IDENTITY" \
+            "$SPARKLE_PATH/Versions/B/XPCServices/Installer.xpc/Contents/MacOS/Installer"
+          codesign --force --options runtime --timestamp --sign "$IDENTITY" \
+            "$SPARKLE_PATH/Versions/B/XPCServices/Installer.xpc"
+          codesign --force --options runtime --timestamp --sign "$IDENTITY" \
+            "$SPARKLE_PATH/Versions/B/Autoupdate"
+          codesign --force --options runtime --timestamp --sign "$IDENTITY" \
+            "$SPARKLE_PATH"
+
+          # Re-sign the main app
+          codesign --force --options runtime --timestamp --sign "$IDENTITY" "$APP_PATH"
+
+          # Verify
+          codesign --verify --deep --strict "$APP_PATH"
+          echo "Re-signing completed successfully"
+
       - name: Notarize App
         env:
           APPLE_ID: ${{ secrets.APPLE_ID }}
