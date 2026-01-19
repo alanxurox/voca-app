@@ -90,7 +90,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         recordingOverlay = RecordingOverlay()
 
         // Initialize Sparkle updater
-        updaterController = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
+        updaterController = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: UpdateChecker.shared, userDriverDelegate: nil)
+        UpdateChecker.shared.configure(with: updaterController.updater)
 
         hotkeyMonitor = HotkeyMonitor(
             onRecordStart: { [weak self] in
@@ -250,7 +251,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    /// Post-process transcribed text: filler removal, custom replacements, formatting
+    /// Post-process transcribed text: filler removal and formatting
     private func postProcessText(_ text: String) -> String {
         var result = text
 
@@ -269,18 +270,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             result = result.replacingOccurrences(of: " \(filler),", with: ",", options: .caseInsensitive)
         }
 
-        // 2. Apply custom word replacements from settings
-        let customReplacements = AppSettings.shared.wordReplacements
-        for (find, replace) in customReplacements {
-            result = result.replacingOccurrences(of: find, with: replace, options: .caseInsensitive)
-        }
-
-        // 3. Fix spacing and punctuation
+        // 2. Fix spacing and punctuation
         result = result.replacingOccurrences(of: "  +", with: " ", options: .regularExpression)  // Multiple spaces
         result = result.replacingOccurrences(of: " ,", with: ",")  // Space before comma
         result = result.replacingOccurrences(of: " \\.", with: ".", options: .regularExpression)  // Space before period
 
-        // 4. Clean up duplicate/mixed punctuation
+        // 3. Clean up duplicate/mixed punctuation
         // Detect if text is primarily Chinese (contains CJK characters)
         let isChinese = result.range(of: "\\p{Han}", options: .regularExpression) != nil
 
@@ -312,7 +307,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Clean up any remaining multiple spaces
         result = result.replacingOccurrences(of: "\\s{2,}", with: " ", options: .regularExpression)
 
-        // 5. Capitalize first letter (for English text)
+        // 4. Capitalize first letter (for English text)
         if let first = result.first {
             result = first.uppercased() + result.dropFirst()
         }

@@ -51,8 +51,8 @@ class SettingsView: NSView {
     private var historyScrollView: NSScrollView!
     private var historyStackView: NSStackView!
     private var historyContainer: FlippedView!
-    private var wordReplacementsTextView: NSTextView!
-    private var wordReplacementsScrollView: NSScrollView!
+    private var versionLabel: NSTextField!
+    private var updateButton: NSButton!
 
     private let modelManager = ModelManager.shared
     private let audioInputManager = AudioInputManager.shared
@@ -84,6 +84,14 @@ class SettingsView: NSView {
             name: .historyDidUpdate,
             object: nil
         )
+
+        // Listen for update availability changes
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(updateAvailabilityChanged(_:)),
+            name: .updateAvailabilityChanged,
+            object: nil
+        )
     }
 
     @objc private func historyDidUpdate() {
@@ -92,6 +100,15 @@ class SettingsView: NSView {
 
     @objc private func appDidBecomeActive() {
         refreshPermissions()
+    }
+
+    @objc private func updateAvailabilityChanged(_ notification: Notification) {
+        guard let isAvailable = notification.object as? Bool else { return }
+        updateButton.isHidden = !isAvailable
+    }
+
+    @objc private func checkForUpdates() {
+        UpdateChecker.shared.checkForUpdates()
     }
 
     required init?(coder: NSCoder) {
@@ -115,7 +132,7 @@ class SettingsView: NSView {
         inputPopup = createPopup()
         shortcutPopup = createPopup()
 
-        // Permission indicators (bottom right)
+        // Permission indicators (bottom left)
         micStatusLabel = NSTextField(labelWithString: "")
         micStatusLabel.font = NSFont.systemFont(ofSize: 12)
 
@@ -135,6 +152,19 @@ class SettingsView: NSView {
         accessibilityStatusIcon.imageScaling = .scaleProportionallyDown
         accessibilityStatusIcon.target = self
         accessibilityStatusIcon.action = #selector(openAccessibilitySettings)
+
+        // Version label (bottom right)
+        let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+        let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
+        versionLabel = NSTextField(labelWithString: "v\(version) (\(build))")
+        versionLabel.font = NSFont.systemFont(ofSize: 11)
+        versionLabel.textColor = .tertiaryLabelColor
+
+        // Update button (left of version, initially hidden)
+        updateButton = NSButton(title: NSLocalizedString("Update", comment: ""), target: self, action: #selector(checkForUpdates))
+        updateButton.bezelStyle = .inline
+        updateButton.controlSize = .small
+        updateButton.isHidden = true  // Show only when update available
 
         // History section
         let historyLabel = NSTextField(labelWithString: NSLocalizedString("History", comment: ""))
@@ -158,28 +188,6 @@ class SettingsView: NSView {
         historyScrollView.autohidesScrollers = true
         historyScrollView.borderType = .bezelBorder
 
-        // Word replacements section
-        let wordReplacementsLabel = NSTextField(labelWithString: NSLocalizedString("Word Replacements", comment: ""))
-        wordReplacementsLabel.font = NSFont.systemFont(ofSize: 13, weight: .medium)
-
-        wordReplacementsTextView = NSTextView()
-        wordReplacementsTextView.font = NSFont.monospacedSystemFont(ofSize: 11, weight: .regular)
-        wordReplacementsTextView.isEditable = true
-        wordReplacementsTextView.isRichText = false
-        wordReplacementsTextView.allowsUndo = true
-        wordReplacementsTextView.delegate = self
-
-        wordReplacementsScrollView = NSScrollView()
-        wordReplacementsScrollView.documentView = wordReplacementsTextView
-        wordReplacementsScrollView.hasVerticalScroller = true
-        wordReplacementsScrollView.hasHorizontalScroller = false
-        wordReplacementsScrollView.autohidesScrollers = true
-        wordReplacementsScrollView.borderType = .bezelBorder
-
-        let wordReplacementsHint = NSTextField(labelWithString: NSLocalizedString("One per line: find=replace (e.g., gonna=going to)", comment: ""))
-        wordReplacementsHint.font = NSFont.systemFont(ofSize: 10)
-        wordReplacementsHint.textColor = .secondaryLabelColor
-
         // Add to view
         addSubview(hintLabel)
         addSubview(modelLabel)
@@ -192,11 +200,10 @@ class SettingsView: NSView {
         addSubview(micStatusIcon)
         addSubview(accessibilityStatusLabel)
         addSubview(accessibilityStatusIcon)
+        addSubview(versionLabel)
+        addSubview(updateButton)
         addSubview(historyLabel)
         addSubview(historyScrollView)
-        addSubview(wordReplacementsLabel)
-        addSubview(wordReplacementsScrollView)
-        addSubview(wordReplacementsHint)
 
         // Layout with Auto Layout
         hintLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -210,12 +217,11 @@ class SettingsView: NSView {
         micStatusIcon.translatesAutoresizingMaskIntoConstraints = false
         accessibilityStatusLabel.translatesAutoresizingMaskIntoConstraints = false
         accessibilityStatusIcon.translatesAutoresizingMaskIntoConstraints = false
+        versionLabel.translatesAutoresizingMaskIntoConstraints = false
+        updateButton.translatesAutoresizingMaskIntoConstraints = false
         historyLabel.translatesAutoresizingMaskIntoConstraints = false
         historyScrollView.translatesAutoresizingMaskIntoConstraints = false
         historyStackView.translatesAutoresizingMaskIntoConstraints = false
-        wordReplacementsLabel.translatesAutoresizingMaskIntoConstraints = false
-        wordReplacementsScrollView.translatesAutoresizingMaskIntoConstraints = false
-        wordReplacementsHint.translatesAutoresizingMaskIntoConstraints = false
 
         NSLayoutConstraint.activate([
             // Hint label (above model row)
@@ -257,7 +263,7 @@ class SettingsView: NSView {
             historyScrollView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 20),
             historyScrollView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -20),
             historyScrollView.topAnchor.constraint(equalTo: historyLabel.bottomAnchor, constant: 8),
-            historyScrollView.heightAnchor.constraint(equalToConstant: 60),
+            historyScrollView.heightAnchor.constraint(equalToConstant: 150),
 
             // Stack view in flipped container (top-aligned)
             historyStackView.leadingAnchor.constraint(equalTo: historyContainer.leadingAnchor),
@@ -265,34 +271,30 @@ class SettingsView: NSView {
             historyStackView.topAnchor.constraint(equalTo: historyContainer.topAnchor),
             historyStackView.bottomAnchor.constraint(lessThanOrEqualTo: historyContainer.bottomAnchor),
 
-            // Word replacements section (after history)
-            wordReplacementsLabel.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 20),
-            wordReplacementsLabel.topAnchor.constraint(equalTo: historyScrollView.bottomAnchor, constant: 12),
-
-            wordReplacementsScrollView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 20),
-            wordReplacementsScrollView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -20),
-            wordReplacementsScrollView.topAnchor.constraint(equalTo: wordReplacementsLabel.bottomAnchor, constant: 8),
-            wordReplacementsScrollView.heightAnchor.constraint(equalToConstant: 60),
-
-            wordReplacementsHint.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 20),
-            wordReplacementsHint.topAnchor.constraint(equalTo: wordReplacementsScrollView.bottomAnchor, constant: 4),
-
-            // Permission indicators (bottom right)
-            accessibilityStatusIcon.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -20),
-            accessibilityStatusIcon.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -12),
-            accessibilityStatusIcon.widthAnchor.constraint(equalToConstant: 16),
-            accessibilityStatusIcon.heightAnchor.constraint(equalToConstant: 16),
-
-            accessibilityStatusLabel.trailingAnchor.constraint(equalTo: accessibilityStatusIcon.leadingAnchor, constant: -4),
-            accessibilityStatusLabel.centerYAnchor.constraint(equalTo: accessibilityStatusIcon.centerYAnchor),
-
-            micStatusIcon.trailingAnchor.constraint(equalTo: accessibilityStatusLabel.leadingAnchor, constant: -16),
-            micStatusIcon.centerYAnchor.constraint(equalTo: accessibilityStatusIcon.centerYAnchor),
+            // Permission indicators (bottom left)
+            micStatusIcon.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 20),
+            micStatusIcon.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -12),
             micStatusIcon.widthAnchor.constraint(equalToConstant: 16),
             micStatusIcon.heightAnchor.constraint(equalToConstant: 16),
 
-            micStatusLabel.trailingAnchor.constraint(equalTo: micStatusIcon.leadingAnchor, constant: -4),
-            micStatusLabel.centerYAnchor.constraint(equalTo: accessibilityStatusIcon.centerYAnchor),
+            micStatusLabel.leadingAnchor.constraint(equalTo: micStatusIcon.trailingAnchor, constant: 4),
+            micStatusLabel.centerYAnchor.constraint(equalTo: micStatusIcon.centerYAnchor),
+
+            accessibilityStatusIcon.leadingAnchor.constraint(equalTo: micStatusLabel.trailingAnchor, constant: 16),
+            accessibilityStatusIcon.centerYAnchor.constraint(equalTo: micStatusIcon.centerYAnchor),
+            accessibilityStatusIcon.widthAnchor.constraint(equalToConstant: 16),
+            accessibilityStatusIcon.heightAnchor.constraint(equalToConstant: 16),
+
+            accessibilityStatusLabel.leadingAnchor.constraint(equalTo: accessibilityStatusIcon.trailingAnchor, constant: 4),
+            accessibilityStatusLabel.centerYAnchor.constraint(equalTo: micStatusIcon.centerYAnchor),
+
+            // Version label (bottom right)
+            versionLabel.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -20),
+            versionLabel.centerYAnchor.constraint(equalTo: micStatusIcon.centerYAnchor),
+
+            // Update button (left of version, hidden by default)
+            updateButton.trailingAnchor.constraint(equalTo: versionLabel.leadingAnchor, constant: -8),
+            updateButton.centerYAnchor.constraint(equalTo: micStatusIcon.centerYAnchor),
         ])
 
         // Set actions
@@ -325,7 +327,6 @@ class SettingsView: NSView {
         refreshShortcuts()
         refreshPermissions()
         refreshHistory()
-        refreshWordReplacements()
     }
 
     // MARK: - Language/Models
@@ -540,7 +541,9 @@ class SettingsView: NSView {
     }
 
     private func createHistoryRow(item: HistoryItem, index: Int, dateFormatter: DateFormatter) -> NSView {
-        let rowView = NSView()
+        let rowView = ClickableHistoryRow(text: item.text, onPaste: { [weak self] text in
+            self?.pasteHistoryText(text)
+        })
         rowView.translatesAutoresizingMaskIntoConstraints = false
 
         // Time label
@@ -609,49 +612,92 @@ class SettingsView: NSView {
         historyManager.playAudio(at: sender.tag)
     }
 
-    // MARK: - Word Replacements
+    private func pasteHistoryText(_ text: String) {
+        // Copy to clipboard
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        pasteboard.setString(text, forType: .string)
 
-    private func refreshWordReplacements() {
-        let replacements = AppSettings.shared.wordReplacements
-        let lines = replacements.map { "\($0.key)=\($0.value)" }.sorted()
-        wordReplacementsTextView.string = lines.joined(separator: "\n")
-    }
-
-    private func saveWordReplacements() {
-        let text = wordReplacementsTextView.string
-        var replacements: [String: String] = [:]
-
-        for line in text.components(separatedBy: "\n") {
-            let trimmed = line.trimmingCharacters(in: .whitespaces)
-            guard !trimmed.isEmpty else { continue }
-
-            // Parse "find=replace" format
-            let parts = trimmed.components(separatedBy: "=")
-            if parts.count >= 2 {
-                let find = parts[0].trimmingCharacters(in: .whitespaces)
-                let replace = parts.dropFirst().joined(separator: "=").trimmingCharacters(in: .whitespaces)
-                if !find.isEmpty {
-                    replacements[find] = replace
-                }
-            }
+        // Check accessibility permission
+        guard AXIsProcessTrusted() else {
+            print("⚠️ Accessibility not granted - text copied to clipboard, please paste manually")
+            return
         }
 
-        AppSettings.shared.wordReplacements = replacements
-    }
-}
+        // Simulate Cmd+V after a delay to ensure focus returns to target app
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            let vKeyCode: CGKeyCode = 0x09  // V key
+            let source = CGEventSource(stateID: .combinedSessionState)
+            source?.setLocalEventsFilterDuringSuppressionState(
+                [.permitLocalMouseEvents, .permitSystemDefinedEvents],
+                state: .eventSuppressionStateSuppressionInterval
+            )
 
-// MARK: - NSTextViewDelegate
+            let keyDown = CGEvent(keyboardEventSource: source, virtualKey: vKeyCode, keyDown: true)
+            let keyUp = CGEvent(keyboardEventSource: source, virtualKey: vKeyCode, keyDown: false)
 
-extension SettingsView: NSTextViewDelegate {
-    func textDidChange(_ notification: Notification) {
-        guard notification.object as? NSTextView === wordReplacementsTextView else { return }
-        saveWordReplacements()
+            let cmdFlag = CGEventFlags(rawValue: CGEventFlags.maskCommand.rawValue | 0x000008)
+            keyDown?.flags = cmdFlag
+            keyUp?.flags = cmdFlag
+
+            keyDown?.post(tap: .cgSessionEventTap)
+            keyUp?.post(tap: .cgSessionEventTap)
+        }
     }
 }
 
 // Flipped view for top-aligned scroll content
 class FlippedView: NSView {
     override var isFlipped: Bool { true }
+}
+
+// Clickable history row with hover feedback
+class ClickableHistoryRow: NSView {
+    private let text: String
+    private let onPaste: (String) -> Void
+    private var trackingArea: NSTrackingArea?
+
+    init(text: String, onPaste: @escaping (String) -> Void) {
+        self.text = text
+        self.onPaste = onPaste
+        super.init(frame: .zero)
+
+        // Add click gesture recognizer
+        let clickGesture = NSClickGestureRecognizer(target: self, action: #selector(handleClick))
+        addGestureRecognizer(clickGesture)
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override func updateTrackingAreas() {
+        super.updateTrackingAreas()
+
+        if let existingArea = trackingArea {
+            removeTrackingArea(existingArea)
+        }
+
+        trackingArea = NSTrackingArea(
+            rect: bounds,
+            options: [.mouseEnteredAndExited, .activeInKeyWindow, .inVisibleRect],
+            owner: self,
+            userInfo: nil
+        )
+        addTrackingArea(trackingArea!)
+    }
+
+    override func mouseEntered(with event: NSEvent) {
+        NSCursor.pointingHand.push()
+    }
+
+    override func mouseExited(with event: NSEvent) {
+        NSCursor.pop()
+    }
+
+    @objc private func handleClick() {
+        onPaste(text)
+    }
 }
 
 // Notification for model change
