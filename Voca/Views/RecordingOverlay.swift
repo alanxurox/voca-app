@@ -163,15 +163,6 @@ class WaveformView: NSView {
             }
         }
 
-        // Add subtle idle animation when no audio
-        if currentLevel < 0.05 {
-            for i in 0..<barCount {
-                let idleVariation = sin(CACurrentMediaTime() * 2.0 + Double(i) * 0.5) * 3.0
-                targetHeights[i] = minBarHeight + CGFloat(idleVariation + 3)
-            }
-            needsRedraw = true
-        }
-
         if needsRedraw {
             needsDisplay = true
         }

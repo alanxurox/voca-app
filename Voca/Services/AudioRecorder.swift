@@ -18,7 +18,7 @@ class AudioRecorder {
     var onSpeechSegment: (([Float]) -> Void)?
 
     // Silence detection parameters
-    private let silenceThreshold: Float = 0.01  // RMS threshold for silence
+    private let silenceThreshold: Float = 0.02  // RMS threshold for silence (increased for mic noise floor)
     private let silenceDuration: Double = 0.5   // Seconds of silence to trigger segment end
     private let minSpeechDuration: Double = 0.5 // Minimum speech duration to process
 
@@ -28,6 +28,10 @@ class AudioRecorder {
     private var speechStartTime: Date?
     private var isSpeaking = false
 
+    // Smoothed RMS for stable visualization
+    private var smoothedRMS: Float = 0
+    private let smoothingFactor: Float = 0.3  // Lower = smoother, higher = more responsive
+
     func startRecording() {
         guard !isRecording else { return }
 
@@ -36,6 +40,7 @@ class AudioRecorder {
         silenceStartTime = nil
         speechStartTime = nil
         isSpeaking = false
+        smoothedRMS = 0
 
         do {
             let engine = AVAudioEngine()
@@ -111,23 +116,6 @@ class AudioRecorder {
     private func processAudioBuffer(_ buffer: AVAudioPCMBuffer,
                                      converter: AVAudioConverter,
                                      outputFormat: AVAudioFormat) {
-        // Calculate audio level from input buffer for visualization
-        var rms: Float = 0
-        if let channelData = buffer.floatChannelData?[0] {
-            let frameLength = Int(buffer.frameLength)
-            var sum: Float = 0
-            for i in 0..<frameLength {
-                let sample = channelData[i]
-                sum += sample * sample
-            }
-            rms = sqrt(sum / Float(frameLength))
-            // Convert to 0-1 range with some amplification for better visualization
-            let level = min(1.0, rms * 5.0)
-            DispatchQueue.main.async { [weak self] in
-                self?.onAudioLevel?(level)
-            }
-        }
-
         // Calculate output buffer size based on sample rate ratio
         let ratio = outputFormat.sampleRate / buffer.format.sampleRate
         let outputFrameCount = AVAudioFrameCount(Double(buffer.frameLength) * ratio)
@@ -155,15 +143,29 @@ class AudioRecorder {
             print("Failed to write audio: \(error)")
         }
 
-        // Accumulate samples for speech detection
+        // Calculate RMS from converted 16kHz buffer (consistent for VAD and visualization)
+        var rms: Float = 0
         if let channelData = outputBuffer.floatChannelData?[0] {
             let frameLength = Int(outputBuffer.frameLength)
+            var sum: Float = 0
             for i in 0..<frameLength {
-                sampleBuffer.append(channelData[i])
+                let sample = channelData[i]
+                sum += sample * sample
+                sampleBuffer.append(sample)  // Accumulate for speech segments
+            }
+            rms = sqrt(sum / Float(frameLength))
+
+            // Apply smoothing for stable visualization
+            smoothedRMS = smoothedRMS * (1 - smoothingFactor) + rms * smoothingFactor
+
+            // Convert to 0-1 range with amplification for visualization
+            let level = min(1.0, smoothedRMS * 5.0)
+            DispatchQueue.main.async { [weak self] in
+                self?.onAudioLevel?(level)
             }
         }
 
-        // Speech/silence detection
+        // Speech/silence detection using raw RMS (not smoothed, for accurate timing)
         detectSpeechSegment(rms: rms)
     }
 
