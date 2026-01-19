@@ -56,7 +56,8 @@ class AboutWindowController: NSWindowController {
 
         // Version
         let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
-        let versionLabel = NSTextField(labelWithString: "Version \(version)")
+        let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
+        let versionLabel = NSTextField(labelWithString: "Version \(version) (\(build))")
         versionLabel.frame = NSRect(x: 0, y: 155, width: 300, height: 16)
         versionLabel.alignment = .center
         versionLabel.font = NSFont.systemFont(ofSize: 11)
