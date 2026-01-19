@@ -16,7 +16,6 @@
 		<img src="https://img.shields.io/github/downloads/zhengyishen0/voca-app/total?style=flat-square&color=brightgreen" alt="Downloads">
 	</a>
 	<img src="https://img.shields.io/badge/macOS-13.0+-orange?style=flat-square" alt="macOS 13+">
-	<img src="https://img.shields.io/badge/Apple_Silicon-required-blue?style=flat-square" alt="Apple Silicon">
 	<img src="https://img.shields.io/badge/Languages-99+-blue?style=flat-square" alt="99+ Languages">
 </p>
 
@@ -38,11 +37,11 @@ Supports 99+ languages with on-device AI. 100% private—your voice never leaves
 | **Open Source** | Yes | No |
 | **Privacy** | 100% on-device | Cloud-based |
 | **Languages** | 99+ | 100+ |
-| **Platform** | macOS (Apple Silicon) | macOS, Windows, iOS |
+| **Platform** | macOS | macOS, Windows, iOS |
 
 ## Features
 
-- **Lightning Speed** — Optimized CoreML models deliver instant transcription on Apple Silicon
+- **Lightning Speed** — Optimized CoreML models deliver instant transcription on your Mac
 - **99+ Languages** — From English to Chinese, Japanese, Korean, Spanish, and many more
 - **100% Private** — All processing happens on-device. Your voice never leaves your Mac
 - **Auto-Paste** — Transcribed text is automatically pasted wherever your cursor is
@@ -91,8 +90,8 @@ Voca includes multiple ASR models optimized for different use cases:
 
 ## Requirements
 
-- **Apple Silicon** (M1/M2/M3/M4) — required for CoreML acceleration
 - **macOS 13.0** (Ventura) or later
+- Apple Silicon (M1/M2/M3/M4) or Intel Mac
 
 ## Privacy
 
