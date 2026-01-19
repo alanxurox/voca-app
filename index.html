@@ -314,6 +314,136 @@
         color: #888888;
       }
 
+      /* Purchase section */
+      .purchase-section {
+        background: rgba(0, 0, 0, 0.03);
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        border-radius: 24px;
+        padding: 48px 40px;
+        margin: 56px 0;
+        position: relative;
+      }
+
+      .purchase-section::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 50%;
+        height: 1px;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(0, 0, 0, 0.15),
+          transparent
+        );
+      }
+
+      .purchase-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(0, 0, 0, 0.05);
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        color: #333333;
+        padding: 10px 24px;
+        border-radius: 100px;
+        font-size: 13px;
+        font-weight: 600;
+        margin-bottom: 24px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+      }
+
+      .purchase-price {
+        font-size: 64px;
+        font-weight: 700;
+        color: #000000;
+        letter-spacing: -2px;
+        line-height: 1;
+        margin-bottom: 8px;
+      }
+
+      .purchase-price-note {
+        font-size: 15px;
+        color: #666666;
+        margin-bottom: 28px;
+      }
+
+      .purchase-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        background: #000000;
+        color: #ffffff;
+        padding: 16px 44px;
+        border-radius: 12px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 16px;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+      }
+
+      .purchase-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+      }
+
+      .purchase-btn svg {
+        width: 18px;
+        height: 18px;
+      }
+
+      .purchase-guarantee {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-size: 14px;
+        color: #4a9a6a;
+        margin-top: 20px;
+      }
+
+      .purchase-guarantee svg {
+        width: 16px;
+        height: 16px;
+      }
+
+      .purchase-features {
+        display: flex;
+        justify-content: center;
+        gap: 28px;
+        margin-top: 28px;
+        padding-top: 24px;
+        border-top: 1px solid rgba(0, 0, 0, 0.06);
+      }
+
+      .purchase-feature {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        color: #555555;
+      }
+
+      .purchase-feature svg {
+        width: 16px;
+        height: 16px;
+        color: #333333;
+      }
+
+      @media (max-width: 600px) {
+        .purchase-features {
+          flex-direction: column;
+          gap: 16px;
+        }
+      }
+
       /* Features */
       .features {
         display: grid;
@@ -564,12 +694,12 @@
                 document.getElementById("download-btn").href =
                   dmg.browser_download_url;
                 document.getElementById("version-note").textContent =
-                  data.tag_name + " · Free and open source";
+                  data.tag_name + " · Free 7-day trial";
               }
             })
             .catch(() => {});
         </script>
-        <p class="version-note" id="version-note">Free and open source</p>
+        <p class="version-note" id="version-note">Free 7-day trial included</p>
         <div class="secondary-links">
           <a
             href="https://github.com/zhengyishen0/voca-app"
@@ -674,14 +804,88 @@
             stroke-linecap="round"
             stroke-linejoin="round"
           >
-            <polyline points="20 12 20 22 4 22 4 12" />
-            <rect x="2" y="7" width="20" height="5" />
-            <line x1="12" y1="22" x2="12" y2="7" />
-            <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z" />
-            <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z" />
+            <path d="M12 2L2 7l10 5 10-5-10-5z" />
+            <path d="M2 17l10 5 10-5" />
+            <path d="M2 12l10 5 10-5" />
           </svg>
-          <h3>No Subscription</h3>
-          <p>Free forever. No monthly fees, no word limits, no hidden costs.</p>
+          <h3>Works Everywhere</h3>
+          <p>Auto-paste into any app. Works with Slack, Notion, VS Code, and more.</p>
+        </div>
+      </div>
+
+      <!-- Purchase section -->
+      <div class="purchase-section">
+        <div class="purchase-badge">Lifetime License</div>
+        <div class="purchase-price">$5</div>
+        <p class="purchase-price-note">One-time payment. Yours forever.</p>
+
+        <a
+          href="https://buy.stripe.com/bJecN5aoodW97Js2PR5EY05"
+          class="purchase-btn"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+            <line x1="1" y1="10" x2="23" y2="10" />
+          </svg>
+          Purchase License
+        </a>
+
+        <div class="purchase-guarantee">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            <polyline points="9 12 11 14 15 10" />
+          </svg>
+          14-day money-back guarantee
+        </div>
+
+        <div class="purchase-features">
+          <div class="purchase-feature">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+            Unlimited devices
+          </div>
+          <div class="purchase-feature">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+            Free updates
+          </div>
+          <div class="purchase-feature">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+            No subscription
+          </div>
         </div>
       </div>
 

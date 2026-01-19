@@ -61,6 +61,17 @@ class StatusBarController: NSObject {
         settingsItem.target = self
         menu.addItem(settingsItem)
 
+        // License status
+        let licenseItem = NSMenuItem(title: LicenseManager.shared.statusText, action: #selector(showLicense), keyEquivalent: "")
+        licenseItem.target = self
+        if !LicenseManager.shared.isLicensed && !LicenseManager.shared.isTrialActive {
+            licenseItem.attributedTitle = NSAttributedString(
+                string: "Trial Expired",
+                attributes: [.foregroundColor: NSColor.systemRed]
+            )
+        }
+        menu.addItem(licenseItem)
+
         // Check for Updates
         let updateItem = NSMenuItem(title: NSLocalizedString("Check for Updates...", comment: ""), action: #selector(checkForUpdates), keyEquivalent: "")
         updateItem.target = self
@@ -95,6 +106,23 @@ class StatusBarController: NSObject {
             name: .modelChanged,
             object: nil
         )
+
+        // Listen for license status changes
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleLicenseChanged),
+            name: .licenseStatusChanged,
+            object: nil
+        )
+    }
+
+    @objc private func handleLicenseChanged() {
+        // Rebuild menu to reflect new license status
+        setupMenu()
+    }
+
+    @objc private func showLicense() {
+        LicenseWindowController.shared.showLicenseWindow()
     }
 
     @objc private func handleModelChanged(_ notification: Notification) {

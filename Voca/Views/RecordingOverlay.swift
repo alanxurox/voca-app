@@ -3,6 +3,7 @@ import Cocoa
 enum OverlayMode {
     case listening
     case processing
+    case transcribing  // Shows live transcription text
 }
 
 class RecordingOverlay {
@@ -35,6 +36,39 @@ class RecordingOverlay {
     func updateLevel(_ level: Float) {
         DispatchQueue.main.async { [weak self] in
             self?.waveformView?.updateLevel(level)
+        }
+    }
+
+    /// Update the transcription preview text
+    func updateTranscription(_ text: String) {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self, let waveform = self.waveformView else { return }
+            waveform.setTranscription(text)
+            // Resize window to fit text if needed
+            self.resizeWindowForText(text)
+        }
+    }
+
+    private func resizeWindowForText(_ text: String) {
+        guard let window = overlayWindow, let screen = NSScreen.main else { return }
+
+        let minWidth: CGFloat = 160
+        let maxWidth: CGFloat = screen.frame.width * 0.8
+        let padding: CGFloat = 40
+
+        // Calculate text width
+        let attributes: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: 14, weight: .medium)
+        ]
+        let textSize = (text as NSString).size(withAttributes: attributes)
+        let neededWidth = min(maxWidth, max(minWidth, textSize.width + padding))
+
+        // Only resize if significantly different
+        if abs(window.frame.width - neededWidth) > 20 {
+            let windowX = (screen.frame.width - neededWidth) / 2
+            let newFrame = NSRect(x: windowX, y: window.frame.origin.y, width: neededWidth, height: window.frame.height)
+            window.setFrame(newFrame, display: true, animate: false)
+            waveformView?.frame = NSRect(x: 0, y: 0, width: neededWidth, height: window.frame.height)
         }
     }
 
@@ -91,6 +125,7 @@ class WaveformView: NSView {
     private var lastUpdateTime: CFTimeInterval = 0
     private var currentLevel: Float = 0
     private var mode: OverlayMode = .listening
+    private var transcriptionText: String = ""
 
     private let minBarHeight: CGFloat = 6
     private let maxBarHeight: CGFloat = 24
@@ -114,6 +149,14 @@ class WaveformView: NSView {
 
     func setMode(_ newMode: OverlayMode) {
         mode = newMode
+        needsDisplay = true
+    }
+
+    func setTranscription(_ text: String) {
+        transcriptionText = text
+        if !text.isEmpty {
+            mode = .transcribing
+        }
         needsDisplay = true
     }
 
@@ -184,10 +227,39 @@ class WaveformView: NSView {
         bgPath.lineWidth = 1
         bgPath.stroke()
 
-        if mode == .processing {
+        switch mode {
+        case .processing:
             drawProcessingAnimation()
-        } else {
+        case .transcribing:
+            drawTranscriptionText()
+        case .listening:
             drawWaveformAnimation()
+        }
+    }
+
+    private func drawTranscriptionText() {
+        // Draw transcription text centered in the pill
+        let textAttributes: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: 14, weight: .medium),
+            .foregroundColor: NSColor.white
+        ]
+
+        let text = transcriptionText
+        let textSize = (text as NSString).size(withAttributes: textAttributes)
+        let textX = (bounds.width - textSize.width) / 2
+        let textY = (bounds.height - textSize.height) / 2
+
+        // Truncate if too long
+        let maxWidth = bounds.width - 30
+        if textSize.width > maxWidth {
+            let paragraphStyle = NSMutableParagraphStyle()
+            paragraphStyle.lineBreakMode = .byTruncatingMiddle
+            var attrs = textAttributes
+            attrs[.paragraphStyle] = paragraphStyle
+            let textRect = NSRect(x: 15, y: textY, width: maxWidth, height: textSize.height)
+            (text as NSString).draw(in: textRect, withAttributes: attrs)
+        } else {
+            (text as NSString).draw(at: NSPoint(x: textX, y: textY), withAttributes: textAttributes)
         }
     }
 

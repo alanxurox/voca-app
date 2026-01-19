@@ -120,6 +120,7 @@ class AppSettings {
         static let selectedModel = "selectedModel"
         static let recordHotkey = "recordHotkey"
         static let inputDeviceUID = "inputDeviceUID"
+        static let wordReplacements = "wordReplacements"
     }
 
     var selectedModel: ASRModel {
@@ -158,6 +159,30 @@ class AppSettings {
         set {
             defaults.set(newValue, forKey: Keys.inputDeviceUID)
         }
+    }
+
+    /// Custom word replacements (find -> replace)
+    var wordReplacements: [String: String] {
+        get {
+            defaults.dictionary(forKey: Keys.wordReplacements) as? [String: String] ?? [:]
+        }
+        set {
+            defaults.set(newValue, forKey: Keys.wordReplacements)
+        }
+    }
+
+    /// Add a word replacement
+    func addWordReplacement(find: String, replace: String) {
+        var replacements = wordReplacements
+        replacements[find] = replace
+        wordReplacements = replacements
+    }
+
+    /// Remove a word replacement
+    func removeWordReplacement(find: String) {
+        var replacements = wordReplacements
+        replacements.removeValue(forKey: find)
+        wordReplacements = replacements
     }
 
     private init() {}

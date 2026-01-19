@@ -9,7 +9,7 @@ class SettingsWindowController: NSWindowController {
 
     private init() {
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 500, height: 280),
+            contentRect: NSRect(x: 0, y: 0, width: 500, height: 380),
             styleMask: [.titled, .closable],
             backing: .buffered,
             defer: false
@@ -51,6 +51,8 @@ class SettingsView: NSView {
     private var historyScrollView: NSScrollView!
     private var historyStackView: NSStackView!
     private var historyContainer: FlippedView!
+    private var wordReplacementsTextView: NSTextView!
+    private var wordReplacementsScrollView: NSScrollView!
 
     private let modelManager = ModelManager.shared
     private let audioInputManager = AudioInputManager.shared
@@ -156,6 +158,28 @@ class SettingsView: NSView {
         historyScrollView.autohidesScrollers = true
         historyScrollView.borderType = .bezelBorder
 
+        // Word replacements section
+        let wordReplacementsLabel = NSTextField(labelWithString: NSLocalizedString("Word Replacements", comment: ""))
+        wordReplacementsLabel.font = NSFont.systemFont(ofSize: 13, weight: .medium)
+
+        wordReplacementsTextView = NSTextView()
+        wordReplacementsTextView.font = NSFont.monospacedSystemFont(ofSize: 11, weight: .regular)
+        wordReplacementsTextView.isEditable = true
+        wordReplacementsTextView.isRichText = false
+        wordReplacementsTextView.allowsUndo = true
+        wordReplacementsTextView.delegate = self
+
+        wordReplacementsScrollView = NSScrollView()
+        wordReplacementsScrollView.documentView = wordReplacementsTextView
+        wordReplacementsScrollView.hasVerticalScroller = true
+        wordReplacementsScrollView.hasHorizontalScroller = false
+        wordReplacementsScrollView.autohidesScrollers = true
+        wordReplacementsScrollView.borderType = .bezelBorder
+
+        let wordReplacementsHint = NSTextField(labelWithString: NSLocalizedString("One per line: find=replace (e.g., gonna=going to)", comment: ""))
+        wordReplacementsHint.font = NSFont.systemFont(ofSize: 10)
+        wordReplacementsHint.textColor = .secondaryLabelColor
+
         // Add to view
         addSubview(hintLabel)
         addSubview(modelLabel)
@@ -170,6 +194,9 @@ class SettingsView: NSView {
         addSubview(accessibilityStatusIcon)
         addSubview(historyLabel)
         addSubview(historyScrollView)
+        addSubview(wordReplacementsLabel)
+        addSubview(wordReplacementsScrollView)
+        addSubview(wordReplacementsHint)
 
         // Layout with Auto Layout
         hintLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -186,6 +213,9 @@ class SettingsView: NSView {
         historyLabel.translatesAutoresizingMaskIntoConstraints = false
         historyScrollView.translatesAutoresizingMaskIntoConstraints = false
         historyStackView.translatesAutoresizingMaskIntoConstraints = false
+        wordReplacementsLabel.translatesAutoresizingMaskIntoConstraints = false
+        wordReplacementsScrollView.translatesAutoresizingMaskIntoConstraints = false
+        wordReplacementsHint.translatesAutoresizingMaskIntoConstraints = false
 
         NSLayoutConstraint.activate([
             // Hint label (above model row)
@@ -227,13 +257,25 @@ class SettingsView: NSView {
             historyScrollView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 20),
             historyScrollView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -20),
             historyScrollView.topAnchor.constraint(equalTo: historyLabel.bottomAnchor, constant: 8),
-            historyScrollView.bottomAnchor.constraint(equalTo: micStatusLabel.topAnchor, constant: -12),
+            historyScrollView.heightAnchor.constraint(equalToConstant: 60),
 
             // Stack view in flipped container (top-aligned)
             historyStackView.leadingAnchor.constraint(equalTo: historyContainer.leadingAnchor),
             historyStackView.trailingAnchor.constraint(equalTo: historyContainer.trailingAnchor),
             historyStackView.topAnchor.constraint(equalTo: historyContainer.topAnchor),
             historyStackView.bottomAnchor.constraint(lessThanOrEqualTo: historyContainer.bottomAnchor),
+
+            // Word replacements section (after history)
+            wordReplacementsLabel.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 20),
+            wordReplacementsLabel.topAnchor.constraint(equalTo: historyScrollView.bottomAnchor, constant: 12),
+
+            wordReplacementsScrollView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 20),
+            wordReplacementsScrollView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -20),
+            wordReplacementsScrollView.topAnchor.constraint(equalTo: wordReplacementsLabel.bottomAnchor, constant: 8),
+            wordReplacementsScrollView.heightAnchor.constraint(equalToConstant: 60),
+
+            wordReplacementsHint.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 20),
+            wordReplacementsHint.topAnchor.constraint(equalTo: wordReplacementsScrollView.bottomAnchor, constant: 4),
 
             // Permission indicators (bottom right)
             accessibilityStatusIcon.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -20),
@@ -283,6 +325,7 @@ class SettingsView: NSView {
         refreshShortcuts()
         refreshPermissions()
         refreshHistory()
+        refreshWordReplacements()
     }
 
     // MARK: - Language/Models
@@ -564,6 +607,45 @@ class SettingsView: NSView {
 
     @objc private func playHistoryItem(_ sender: NSButton) {
         historyManager.playAudio(at: sender.tag)
+    }
+
+    // MARK: - Word Replacements
+
+    private func refreshWordReplacements() {
+        let replacements = AppSettings.shared.wordReplacements
+        let lines = replacements.map { "\($0.key)=\($0.value)" }.sorted()
+        wordReplacementsTextView.string = lines.joined(separator: "\n")
+    }
+
+    private func saveWordReplacements() {
+        let text = wordReplacementsTextView.string
+        var replacements: [String: String] = [:]
+
+        for line in text.components(separatedBy: "\n") {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            guard !trimmed.isEmpty else { continue }
+
+            // Parse "find=replace" format
+            let parts = trimmed.components(separatedBy: "=")
+            if parts.count >= 2 {
+                let find = parts[0].trimmingCharacters(in: .whitespaces)
+                let replace = parts.dropFirst().joined(separator: "=").trimmingCharacters(in: .whitespaces)
+                if !find.isEmpty {
+                    replacements[find] = replace
+                }
+            }
+        }
+
+        AppSettings.shared.wordReplacements = replacements
+    }
+}
+
+// MARK: - NSTextViewDelegate
+
+extension SettingsView: NSTextViewDelegate {
+    func textDidChange(_ notification: Notification) {
+        guard notification.object as? NSTextView === wordReplacementsTextView else { return }
+        saveWordReplacements()
     }
 }
 

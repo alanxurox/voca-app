@@ -111,8 +111,25 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         print("ESC to cancel | ⌃⌥V for history")
         print("─────────────────────────────────────")
 
+        // Check license status
+        checkLicenseStatus()
+
         // Show onboarding if first launch or no model downloaded
         checkAndShowOnboarding()
+    }
+
+    private func checkLicenseStatus() {
+        if !LicenseManager.shared.canUseApp {
+            // Trial expired and not licensed - show license window
+            print("⚠️ Trial expired, showing license window...")
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                LicenseWindowController.shared.showLicenseWindow()
+            }
+        } else if !LicenseManager.shared.isLicensed {
+            print("📋 Trial: \(LicenseManager.shared.trialDaysRemaining) days remaining")
+        } else {
+            print("✓ Licensed")
+        }
     }
 
     private func checkAndShowOnboarding() {
@@ -124,6 +141,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func startRecording() {
+        // Check license status
+        if !LicenseManager.shared.canUseApp {
+            print("⚠️ Trial expired, showing license window...")
+            LicenseWindowController.shared.showLicenseWindow()
+            return
+        }
+
         // Check if selected model is downloaded
         let selectedModel = AppSettings.shared.selectedModel
         if !ModelManager.shared.isModelDownloaded(selectedModel) {
@@ -196,13 +220,57 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
                     if !cleanedText.isEmpty {
                         self.incrementalText.append(cleanedText)
-                        print("✓ Incremental: \(cleanedText)")
-                        // Always paste the transcribed segment (including final segment after recording stops)
-                        self.pasteText(cleanedText + " ")
+
+                        // Combine all segments and apply post-processing
+                        let combinedText = self.incrementalText.joined(separator: " ")
+                        let processedText = self.postProcessText(combinedText)
+
+                        print("✓ Incremental: \(cleanedText) → Full: \(processedText)")
+
+                        // Show in overlay as preview (don't paste yet)
+                        self.recordingOverlay.updateTranscription(processedText)
                     }
                 }
             }
         }
+    }
+
+    /// Post-process transcribed text: filler removal, custom replacements, formatting
+    private func postProcessText(_ text: String) -> String {
+        var result = text
+
+        // 1. Remove basic filler words (multiple languages)
+        // English: um, uh, er, ah, hmm
+        // Chinese: 呃, 嗯, 啊, 那个
+        // Japanese: えーと, あの, えー
+        // Korean: 음, 어
+        let fillerWords = ["um", "uh", "er", "ah", "hmm", "呃", "嗯", "啊", "那个", "えーと", "あの", "えー", "음", "어"]
+        for filler in fillerWords {
+            // Remove filler surrounded by spaces
+            result = result.replacingOccurrences(of: " \(filler) ", with: " ", options: .caseInsensitive)
+            // Remove filler at start
+            result = result.replacingOccurrences(of: "^\(filler) ", with: "", options: [.caseInsensitive, .regularExpression])
+            // Remove filler followed by comma
+            result = result.replacingOccurrences(of: " \(filler),", with: ",", options: .caseInsensitive)
+        }
+
+        // 2. Apply custom word replacements from settings
+        let customReplacements = AppSettings.shared.wordReplacements
+        for (find, replace) in customReplacements {
+            result = result.replacingOccurrences(of: find, with: replace, options: .caseInsensitive)
+        }
+
+        // 3. Fix spacing and punctuation
+        result = result.replacingOccurrences(of: "  +", with: " ", options: .regularExpression)  // Multiple spaces
+        result = result.replacingOccurrences(of: " ,", with: ",")  // Space before comma
+        result = result.replacingOccurrences(of: " \\.", with: ".", options: .regularExpression)  // Space before period
+
+        // 4. Capitalize first letter
+        if let first = result.first {
+            result = first.uppercased() + result.dropFirst()
+        }
+
+        return result.trimmingCharacters(in: .whitespaces)
     }
 
     private func stopRecordingAndTranscribe() {
@@ -254,12 +322,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         AudioInputManager.shared.restoreSavedDefault()
 
         let combinedText = incrementalText.joined(separator: " ")
+        let processedText = postProcessText(combinedText)
         let totalTime = totalStartTime.map { Date().timeIntervalSince($0) } ?? 0
 
-        if !combinedText.isEmpty {
-            print("✓ Final: \(combinedText)")
+        if !processedText.isEmpty {
+            print("✓ Final: \(processedText)")
             print("  ⏱ total: \(Int(totalTime * 1000))ms (incremental)")
-            historyManager.add(combinedText, audioURL: audioURL)
+            historyManager.add(processedText, audioURL: audioURL)
+            // Paste final text only once at the end
+            pasteText(processedText)
         } else {
             print("✗ No incremental results")
         }
