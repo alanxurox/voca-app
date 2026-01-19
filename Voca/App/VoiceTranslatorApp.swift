@@ -116,6 +116,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Show onboarding if first launch or no model downloaded
         checkAndShowOnboarding()
+
+        // Check for updates silently on launch
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
+            self?.statusBarController.checkForUpdatesSilently()
+        }
     }
 
     private func checkLicenseStatus() {

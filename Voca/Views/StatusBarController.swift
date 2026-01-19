@@ -216,32 +216,47 @@ class StatusBarController: NSObject {
 
     // MARK: - Update Checker
 
+    /// Check for updates silently on launch - only shows alert if update available
+    func checkForUpdatesSilently() {
+        checkForUpdatesInternal(silent: true)
+    }
+
     @objc private func checkForUpdates() {
+        checkForUpdatesInternal(silent: false)
+    }
+
+    private func checkForUpdatesInternal(silent: Bool) {
         let currentVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.0.0"
 
         let url = URL(string: "https://api.github.com/repos/zhengyishen0/voca-app/releases/latest")!
         var request = URLRequest(url: url)
         request.setValue("application/vnd.github.v3+json", forHTTPHeaderField: "Accept")
+        request.timeoutInterval = 10
 
         URLSession.shared.dataTask(with: request) { data, response, error in
             DispatchQueue.main.async {
                 if let error = error {
-                    self.showUpdateAlert(title: NSLocalizedString("Update Check Failed", comment: ""),
-                                        message: String(format: NSLocalizedString("Could not check for updates: %@", comment: ""), error.localizedDescription))
+                    if !silent {
+                        self.showUpdateAlert(title: NSLocalizedString("Update Check Failed", comment: ""),
+                                            message: String(format: NSLocalizedString("Could not check for updates: %@", comment: ""), error.localizedDescription))
+                    }
                     return
                 }
 
                 guard let data = data,
                       let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
                       let tagName = json["tag_name"] as? String else {
-                    self.showUpdateAlert(title: NSLocalizedString("Update Check Failed", comment: ""),
-                                        message: NSLocalizedString("Could not parse update information.", comment: ""))
+                    if !silent {
+                        self.showUpdateAlert(title: NSLocalizedString("Update Check Failed", comment: ""),
+                                            message: NSLocalizedString("Could not parse update information.", comment: ""))
+                    }
                     return
                 }
 
                 let latestVersion = tagName.hasPrefix("v") ? String(tagName.dropFirst()) : tagName
 
                 if self.isVersion(latestVersion, newerThan: currentVersion) {
+                    // Always show update available alert
                     let alert = NSAlert()
                     alert.messageText = NSLocalizedString("Update Available", comment: "")
                     alert.informativeText = String(format: NSLocalizedString("A new version (%@) is available. You are currently running version %@.", comment: ""), latestVersion, currentVersion)
@@ -256,7 +271,8 @@ class StatusBarController: NSObject {
                             NSWorkspace.shared.open(downloadURL)
                         }
                     }
-                } else {
+                } else if !silent {
+                    // Only show "up to date" when manually checking
                     self.showUpdateAlert(title: NSLocalizedString("You're Up to Date", comment: ""),
                                         message: String(format: NSLocalizedString("Voca %@ is the latest version.", comment: ""), currentVersion))
                 }
