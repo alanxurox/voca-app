@@ -76,7 +76,8 @@ jobs:
           SPARKLE_PATH="$APP_PATH/Contents/Frameworks/Sparkle.framework"
           IDENTITY="Developer ID Application: Zhengyi Shen ($APPLE_TEAM_ID)"
 
-          # Re-sign Sparkle XPC services and binaries with timestamp
+          # Re-sign all Sparkle binaries with timestamp
+          # Sign innermost binaries first, then bundles, then framework
           codesign --force --options runtime --timestamp --sign "$IDENTITY" \
             "$SPARKLE_PATH/Versions/B/XPCServices/Downloader.xpc/Contents/MacOS/Downloader"
           codesign --force --options runtime --timestamp --sign "$IDENTITY" \
@@ -85,6 +86,10 @@ jobs:
             "$SPARKLE_PATH/Versions/B/XPCServices/Installer.xpc/Contents/MacOS/Installer"
           codesign --force --options runtime --timestamp --sign "$IDENTITY" \
             "$SPARKLE_PATH/Versions/B/XPCServices/Installer.xpc"
+          codesign --force --options runtime --timestamp --sign "$IDENTITY" \
+            "$SPARKLE_PATH/Versions/B/Updater.app/Contents/MacOS/Updater"
+          codesign --force --options runtime --timestamp --sign "$IDENTITY" \
+            "$SPARKLE_PATH/Versions/B/Updater.app"
           codesign --force --options runtime --timestamp --sign "$IDENTITY" \
             "$SPARKLE_PATH/Versions/B/Autoupdate"
           codesign --force --options runtime --timestamp --sign "$IDENTITY" \
