@@ -563,11 +563,13 @@
               if (dmg) {
                 document.getElementById("download-btn").href =
                   dmg.browser_download_url;
+                document.getElementById("version-note").textContent =
+                  data.tag_name + " · Free and open source";
               }
             })
             .catch(() => {});
         </script>
-        <p class="version-note">Free and open source</p>
+        <p class="version-note" id="version-note">Free and open source</p>
         <div class="secondary-links">
           <a
             href="https://github.com/zhengyishen0/voca-app"
