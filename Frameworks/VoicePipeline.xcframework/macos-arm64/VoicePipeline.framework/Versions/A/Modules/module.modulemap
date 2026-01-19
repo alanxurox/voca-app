@@ -1,8 +1,0 @@
-framework module "VoicePipeline" {
-    umbrella header "VoicePipeline.h"
-
-    export *
-    module * { export * }
-
-    use Foundation
-}
