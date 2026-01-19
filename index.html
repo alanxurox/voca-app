@@ -537,7 +537,7 @@
       <!-- Download -->
       <div class="download-section">
         <a
-          href="https://github.com/zhengyishen0/voca-app/releases/latest/download/Voca.dmg"
+          href="https://github.com/zhengyishen0/voca-app/releases/latest"
           class="download-btn"
           id="download-btn"
         >
@@ -559,7 +559,10 @@
           )
             .then((r) => r.json())
             .then((data) => {
-              if (data.tag_name) {
+              const dmg = data.assets.find((a) => a.name.endsWith(".dmg"));
+              if (dmg) {
+                document.getElementById("download-btn").href =
+                  dmg.browser_download_url;
                 document.getElementById("version-note").textContent =
                   data.tag_name + " · Free and open source";
               }

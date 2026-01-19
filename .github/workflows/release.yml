@@ -99,18 +99,18 @@ jobs:
             --icon-size 100 \
             --icon "Voca.app" 150 185 \
             --app-drop-link 450 185 \
-            "Voca.dmg" \
+            "Voca-${{ env.VERSION }}.dmg" \
             "build/Voca.xcarchive/Products/Applications/Voca.app"
 
       - name: Calculate DMG SHA256
         run: |
-          SHA256=$(shasum -a 256 "Voca.dmg" | cut -d ' ' -f 1)
+          SHA256=$(shasum -a 256 "Voca-${{ env.VERSION }}.dmg" | cut -d ' ' -f 1)
           echo "SHA256=$SHA256" >> $GITHUB_ENV
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          files: Voca.dmg
+          files: Voca-${{ env.VERSION }}.dmg
           body: |
             ## Voca ${{ env.VERSION }}
 
@@ -119,7 +119,7 @@ jobs:
             ### Installation
 
             **Download**
-            1. Download `Voca.dmg`
+            1. Download `Voca-${{ env.VERSION }}.dmg`
             2. Open the DMG and drag Voca to Applications
             3. Grant Accessibility and Microphone permissions when prompted
 
@@ -159,7 +159,7 @@ jobs:
             version "${VERSION}"
             sha256 "${SHA256}"
 
-            url "https://github.com/zhengyishen0/voca-app/releases/download/v#{version}/Voca.dmg"
+            url "https://github.com/zhengyishen0/voca-app/releases/download/v#{version}/Voca-#{version}.dmg"
             name "Voca"
             desc "Voice-to-text transcription for macOS menu bar"
             homepage "https://github.com/zhengyishen0/voca-app"
