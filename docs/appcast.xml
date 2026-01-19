@@ -13,7 +13,7 @@
       <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
       <enclosure
         url="https://github.com/zhengyishen0/voca-app/releases/download/v1.2.3/Voca-1.2.3.dmg"
-        sparkle:edSignature="sparkle:edSignature="C0am8FEFgW0jn3a63wpa+5RkohCc8rpBllfa3pQ7TsFwxCGLwmiWQjNBJ4QVASIBHIsvKuFHq5KNFLL/rwFVAg==" length="17586374""
+        sparkle:edSignature="C0am8FEFgW0jn3a63wpa+5RkohCc8rpBllfa3pQ7TsFwxCGLwmiWQjNBJ4QVASIBHIsvKuFHq5KNFLL/rwFVAg=="
         length="17586374"
         type="application/octet-stream"/>
     </item>

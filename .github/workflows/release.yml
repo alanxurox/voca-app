@@ -167,10 +167,13 @@ jobs:
           curl -L -o Sparkle.tar.xz "https://github.com/sparkle-project/Sparkle/releases/download/2.6.4/Sparkle-2.6.4.tar.xz"
           tar -xf Sparkle.tar.xz
 
-          # Sign the DMG using EdDSA
-          SIGNATURE=$(echo "$SPARKLE_PRIVATE_KEY" | ./bin/sign_update "Voca-${{ env.VERSION }}.dmg" -f -)
+          # Sign the DMG using EdDSA and extract just the signature value
+          SIGN_OUTPUT=$(echo "$SPARKLE_PRIVATE_KEY" | ./bin/sign_update "Voca-${{ env.VERSION }}.dmg" -f -)
+          echo "Sign output: $SIGN_OUTPUT"
+          # Extract just the base64 signature from the output (format: sparkle:edSignature="xxx" length="yyy")
+          SIGNATURE=$(echo "$SIGN_OUTPUT" | sed -n 's/.*sparkle:edSignature="\([^"]*\)".*/\1/p')
           echo "SPARKLE_SIGNATURE=$SIGNATURE" >> $GITHUB_ENV
-          echo "Signed with EdDSA"
+          echo "Extracted signature: $SIGNATURE"
 
       - name: Update appcast.xml
         run: |
