@@ -85,6 +85,46 @@ class AudioInputManager {
         return status == noErr ? deviceID : nil
     }
 
+    /// Set the system default input device (changes system-wide setting)
+    /// Returns true if successful
+    @discardableResult
+    func setDefaultInputDevice(_ deviceID: AudioDeviceID) -> Bool {
+        // Check if already set to avoid unnecessary changes
+        if let current = getDefaultInputDevice(), current == deviceID {
+            print("Device \(deviceID) already set as default, skipping")
+            return true
+        }
+
+        var propertyAddress = AudioObjectPropertyAddress(
+            mSelector: kAudioHardwarePropertyDefaultInputDevice,
+            mScope: kAudioObjectPropertyScopeGlobal,
+            mElement: kAudioObjectPropertyElementMain
+        )
+
+        var id = deviceID
+        let status = AudioObjectSetPropertyData(
+            AudioObjectID(kAudioObjectSystemObject),
+            &propertyAddress,
+            0,
+            nil,
+            UInt32(MemoryLayout<AudioDeviceID>.size),
+            &id
+        )
+
+        if status == noErr {
+            print("System default input changed to device \(deviceID)")
+            return true
+        } else {
+            print("Failed to set default input device: \(status)")
+            return false
+        }
+    }
+
+    /// Get device ID from UID
+    func getDeviceID(forUID uid: String) -> AudioDeviceID? {
+        return getInputDevices().first { $0.uid == uid }?.id
+    }
+
     // MARK: - Private Helpers
 
     private func hasInputChannels(_ deviceID: AudioDeviceID) -> Bool {

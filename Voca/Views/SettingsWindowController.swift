@@ -288,8 +288,13 @@ class SettingsView: NSView {
         let devices = audioInputManager.getInputDevices()
         let currentUID = AppSettings.shared.inputDeviceUID
 
-        // Add "System Default" first (uses whatever macOS selects)
-        inputPopup.addItem(withTitle: NSLocalizedString("System Default", comment: ""))
+        // Add "System Default" first, showing what the current default is
+        var systemDefaultTitle = NSLocalizedString("System Default", comment: "")
+        if let defaultID = audioInputManager.getDefaultInputDevice(),
+           let defaultDevice = devices.first(where: { $0.id == defaultID }) {
+            systemDefaultTitle += " (\(defaultDevice.name))"
+        }
+        inputPopup.addItem(withTitle: systemDefaultTitle)
         inputPopup.lastItem?.representedObject = ""
 
         // Add all hardware devices

@@ -139,6 +139,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
 
+        // Apply selected input device (if user chose a specific one)
+        let selectedUID = AppSettings.shared.inputDeviceUID
+        if !selectedUID.isEmpty {
+            if let deviceID = AudioInputManager.shared.getDeviceID(forUID: selectedUID) {
+                AudioInputManager.shared.setDefaultInputDevice(deviceID)
+            } else {
+                print("⚠️ Selected device not found, using system default")
+            }
+        }
+
         print("🎤 Recording...")
         statusBarController.setState(.recording)
         recordingOverlay.show()
