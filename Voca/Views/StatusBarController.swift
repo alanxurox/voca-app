@@ -1,4 +1,5 @@
 import Cocoa
+import Sparkle
 
 enum RecordingState {
     case idle
@@ -11,10 +12,12 @@ class StatusBarController: NSObject {
     private var menu: NSMenu!
     private var hintItem: NSMenuItem!
 
+    private let updater: SPUUpdater
     private let onModelChange: (ASRModel) -> Void
     private var historyManager: HistoryManager { HistoryManager.shared }
 
-    init(onModelChange: @escaping (ASRModel) -> Void) {
+    init(updater: SPUUpdater, onModelChange: @escaping (ASRModel) -> Void) {
+        self.updater = updater
         self.onModelChange = onModelChange
 
         super.init()
@@ -216,90 +219,8 @@ class StatusBarController: NSObject {
 
     // MARK: - Update Checker
 
-    /// Check for updates silently on launch - only shows alert if update available
-    func checkForUpdatesSilently() {
-        checkForUpdatesInternal(silent: true)
-    }
-
     @objc private func checkForUpdates() {
-        checkForUpdatesInternal(silent: false)
-    }
-
-    private func checkForUpdatesInternal(silent: Bool) {
-        let currentVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.0.0"
-
-        let url = URL(string: "https://api.github.com/repos/zhengyishen0/voca-app/releases/latest")!
-        var request = URLRequest(url: url)
-        request.setValue("application/vnd.github.v3+json", forHTTPHeaderField: "Accept")
-        request.timeoutInterval = 10
-
-        URLSession.shared.dataTask(with: request) { data, response, error in
-            DispatchQueue.main.async {
-                if let error = error {
-                    if !silent {
-                        self.showUpdateAlert(title: NSLocalizedString("Update Check Failed", comment: ""),
-                                            message: String(format: NSLocalizedString("Could not check for updates: %@", comment: ""), error.localizedDescription))
-                    }
-                    return
-                }
-
-                guard let data = data,
-                      let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                      let tagName = json["tag_name"] as? String else {
-                    if !silent {
-                        self.showUpdateAlert(title: NSLocalizedString("Update Check Failed", comment: ""),
-                                            message: NSLocalizedString("Could not parse update information.", comment: ""))
-                    }
-                    return
-                }
-
-                let latestVersion = tagName.hasPrefix("v") ? String(tagName.dropFirst()) : tagName
-
-                if self.isVersion(latestVersion, newerThan: currentVersion) {
-                    // Always show update available alert
-                    let alert = NSAlert()
-                    alert.messageText = NSLocalizedString("Update Available", comment: "")
-                    alert.informativeText = String(format: NSLocalizedString("A new version (%@) is available. You are currently running version %@.", comment: ""), latestVersion, currentVersion)
-                    alert.alertStyle = .informational
-                    alert.addButton(withTitle: NSLocalizedString("Download", comment: ""))
-                    alert.addButton(withTitle: NSLocalizedString("Later", comment: ""))
-
-                    if alert.runModal() == .alertFirstButtonReturn {
-                        // Direct download URL for the DMG
-                        let dmgURL = "https://github.com/zhengyishen0/voca-app/releases/download/\(tagName)/Voca-\(latestVersion).dmg"
-                        if let downloadURL = URL(string: dmgURL) {
-                            NSWorkspace.shared.open(downloadURL)
-                        }
-                    }
-                } else if !silent {
-                    // Only show "up to date" when manually checking
-                    self.showUpdateAlert(title: NSLocalizedString("You're Up to Date", comment: ""),
-                                        message: String(format: NSLocalizedString("Voca %@ is the latest version.", comment: ""), currentVersion))
-                }
-            }
-        }.resume()
-    }
-
-    private func showUpdateAlert(title: String, message: String) {
-        let alert = NSAlert()
-        alert.messageText = title
-        alert.informativeText = message
-        alert.alertStyle = .informational
-        alert.addButton(withTitle: "OK")
-        alert.runModal()
-    }
-
-    private func isVersion(_ version1: String, newerThan version2: String) -> Bool {
-        let v1 = version1.split(separator: ".").compactMap { Int($0) }
-        let v2 = version2.split(separator: ".").compactMap { Int($0) }
-
-        for i in 0..<max(v1.count, v2.count) {
-            let n1 = i < v1.count ? v1[i] : 0
-            let n2 = i < v2.count ? v2[i] : 0
-            if n1 > n2 { return true }
-            if n1 < n2 { return false }
-        }
-        return false
+        updater.checkForUpdates()
     }
 
     /// Truncate string to fit within maxWidth pixels (handles CJK vs Latin width differences)

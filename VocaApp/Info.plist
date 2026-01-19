@@ -32,5 +32,11 @@
     <string>Voca needs microphone access to record your voice for transcription.</string>
     <key>NSAccessibilityUsageDescription</key>
     <string>Voca needs accessibility access to paste transcriptions into your apps.</string>
+    <key>SUFeedURL</key>
+    <string>https://zhengyishen0.github.io/voca-app/appcast.xml</string>
+    <key>SUPublicEDKey</key>
+    <string>dJQ3Fmik+YHHBXhxtqdIbqi7Z2jTt3GQ4iVqaZsrSag=</string>
+    <key>SUEnableAutomaticChecks</key>
+    <true/>
 </dict>
 </plist>

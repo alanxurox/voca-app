@@ -102,10 +102,59 @@ jobs:
             "Voca-${{ env.VERSION }}.dmg" \
             "build/Voca.xcarchive/Products/Applications/Voca.app"
 
-      - name: Calculate DMG SHA256
+      - name: Calculate DMG SHA256 and size
         run: |
           SHA256=$(shasum -a 256 "Voca-${{ env.VERSION }}.dmg" | cut -d ' ' -f 1)
+          DMG_SIZE=$(stat -f%z "Voca-${{ env.VERSION }}.dmg")
           echo "SHA256=$SHA256" >> $GITHUB_ENV
+          echo "DMG_SIZE=$DMG_SIZE" >> $GITHUB_ENV
+
+      - name: Sign update with Sparkle EdDSA
+        env:
+          SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
+        run: |
+          # Download Sparkle CLI tools
+          curl -L -o Sparkle.tar.xz "https://github.com/sparkle-project/Sparkle/releases/download/2.6.4/Sparkle-2.6.4.tar.xz"
+          tar -xf Sparkle.tar.xz
+
+          # Sign the DMG using EdDSA
+          SIGNATURE=$(echo "$SPARKLE_PRIVATE_KEY" | ./bin/sign_update "Voca-${{ env.VERSION }}.dmg" -f -)
+          echo "SPARKLE_SIGNATURE=$SIGNATURE" >> $GITHUB_ENV
+          echo "Signed with EdDSA"
+
+      - name: Update appcast.xml
+        run: |
+          # Generate the new item XML
+          PUBDATE=$(date -R)
+
+          cat > new_item.xml << EOF
+    <item>
+      <title>Version ${{ env.VERSION }}</title>
+      <pubDate>${PUBDATE}</pubDate>
+      <sparkle:version>${BUILD_NUMBER}</sparkle:version>
+      <sparkle:shortVersionString>${VERSION}</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
+      <enclosure
+        url="https://github.com/zhengyishen0/voca-app/releases/download/v${VERSION}/Voca-${VERSION}.dmg"
+        sparkle:edSignature="${SPARKLE_SIGNATURE}"
+        length="${DMG_SIZE}"
+        type="application/octet-stream"/>
+    </item>
+  EOF
+
+          # Insert the new item after the language tag in appcast.xml
+          sed -i '' "/<language>en<\/language>/r new_item.xml" docs/appcast.xml
+          rm new_item.xml
+
+          cat docs/appcast.xml
+
+      - name: Commit appcast.xml
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/appcast.xml
+          git commit -m "Update appcast.xml for v${{ env.VERSION }}"
+          git push origin HEAD:main
 
       - name: Create Release
         uses: softprops/action-gh-release@v1

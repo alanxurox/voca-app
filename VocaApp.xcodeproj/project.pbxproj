@@ -123,7 +123,7 @@
 			name = Voca;
 			packageProductDependencies = (
 				C1000002CCCC000200000002 /* VocaLib */,
-			);
+				C1000082KKKK008200000082 /* Sparkle */,);
 			productName = Voca;
 			productReference = C1000020BBBB002000000020 /* Voca.app */;
 			productType = "com.apple.product-type.application";
@@ -159,6 +159,7 @@
 			mainGroup = C1000040FFFF004000000040 /* Root */;
 			packageReferences = (
 				C1000080KKKK008000000080 /* XCLocalSwiftPackageReference "." */,
+				C1000081KKKK008100000081 /* XCRemoteSwiftPackageReference "Sparkle" */,
 			);
 			productRefGroup = C1000043FFFF004300000043 /* Products */;
 			projectDirPath = "";
@@ -394,6 +395,26 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+
+/* Begin XCRemoteSwiftPackageReference section */
+		C1000081KKKK008100000081 /* XCRemoteSwiftPackageReference "Sparkle" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sparkle-project/Sparkle";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.6.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		C1000082KKKK008200000082 /* Sparkle */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C1000081KKKK008100000081 /* XCRemoteSwiftPackageReference "Sparkle" */;
+			productName = Sparkle;
+		};
+/* End XCSwiftPackageProductDependency section */
 
 /* Begin XCLocalSwiftPackageReference section */
 		C1000080KKKK008000000080 /* XCLocalSwiftPackageReference "." */ = {

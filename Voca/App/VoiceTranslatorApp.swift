@@ -2,6 +2,7 @@ import Cocoa
 import VoicePipeline
 import ApplicationServices
 import AVFoundation
+import Sparkle
 
 private var appDelegateRef: AppDelegate?
 
@@ -23,6 +24,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var historyManager: HistoryManager { HistoryManager.shared }
     private var recordingOverlay: RecordingOverlay!
     private var asrEngine: ASREngine!
+
+    // Sparkle updater
+    private var updaterController: SPUStandardUpdaterController!
 
     private var totalStartTime: Date?
     private var isTranscribing = false
@@ -85,6 +89,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         audioRecorder = AudioRecorder()
         recordingOverlay = RecordingOverlay()
 
+        // Initialize Sparkle updater
+        updaterController = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
+
         hotkeyMonitor = HotkeyMonitor(
             onRecordStart: { [weak self] in
                 self?.startRecording()
@@ -98,6 +105,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         )
 
         statusBarController = StatusBarController(
+            updater: updaterController.updater,
             onModelChange: { [weak self] model in
                 self?.transcriber.setModel(model)
             }
@@ -116,11 +124,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Show onboarding if first launch or no model downloaded
         checkAndShowOnboarding()
-
-        // Check for updates silently on launch
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
-            self?.statusBarController.checkForUpdatesSilently()
-        }
     }
 
     private func checkLicenseStatus() {
