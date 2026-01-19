@@ -29,6 +29,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var escMonitor: Any?
     private var transcriptionTimeoutTask: DispatchWorkItem?
     private let transcriptionTimeoutSeconds: TimeInterval = 30
+    private var currentAudioURL: URL?  // Track audio URL for history
 
     // Model paths - CoreML models downloaded to Application Support, assets bundled
     private var modelDir: String {
@@ -171,6 +172,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func startTranscription(audioURL: URL) {
         isTranscribing = true
+        currentAudioURL = audioURL  // Save for history
         statusBarController.setState(.processing)
 
         escMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
@@ -206,6 +208,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         removeEscMonitor()
         recordingOverlay.hide()
         statusBarController.setState(.idle)
+        // Clean up any partial memory allocations
+        asrEngine.collectGarbage()
         print("✗ Cancelled")
     }
 
@@ -213,6 +217,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         isTranscribing = false
         removeEscMonitor()
         recordingOverlay.hide()
+
+        // Clean up Kotlin/Native memory after transcription
+        asrEngine.collectGarbage()
 
         let totalTime = totalStartTime.map { Date().timeIntervalSince($0) } ?? 0
         let modelTime = result.modelTime
@@ -233,7 +240,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             let totalMs = Int(totalTime * 1000)
             print("✓ \(cleanedText)")
             print("  ⏱ model: \(modelMs)ms | total: \(totalMs)ms")
-            historyManager.add(cleanedText)
+            historyManager.add(cleanedText, audioURL: currentAudioURL)
+            currentAudioURL = nil
             pasteText(cleanedText)
         } else {
             print("✗ No result (model: \(Int(modelTime * 1000))ms)")

@@ -148,6 +148,7 @@ __attribute__((objc_subclassing_restricted))
 __attribute__((swift_name("ASREngine")))
 @interface VoicePipelineASREngine : VoicePipelineBase
 - (instancetype)initWithModelDir:(NSString *)modelDir assetsDir:(NSString *)assetsDir __attribute__((swift_name("init(modelDir:assetsDir:)"))) __attribute__((objc_designated_initializer));
+- (void)collectGarbage __attribute__((swift_name("collectGarbage()")));
 - (NSString *)getAssetsDir __attribute__((swift_name("getAssetsDir()")));
 - (NSString *)getModelDir __attribute__((swift_name("getModelDir()")));
 - (BOOL)initialize __attribute__((swift_name("initialize()")));

@@ -21,12 +21,6 @@ class AudioRecorder {
             let engine = AVAudioEngine()
             let inputNode = engine.inputNode
 
-            // Set input device if user has selected one
-            configureInputDevice(for: inputNode)
-
-            // Note: Voice processing (setVoiceProcessingEnabled) disabled for now
-            // It changes audio format and may conflict with custom input devices
-
             // Create temp file for recording
             let tempDir = FileManager.default.temporaryDirectory
             let fileName = "voice_\(Date().timeIntervalSince1970).wav"
@@ -130,39 +124,6 @@ class AudioRecorder {
             try audioFile?.write(from: outputBuffer)
         } catch {
             print("Failed to write audio: \(error)")
-        }
-    }
-
-    private func configureInputDevice(for inputNode: AVAudioInputNode) {
-        let savedUID = AppSettings.shared.inputDeviceUID
-
-        // Empty UID means use system default
-        guard !savedUID.isEmpty else { return }
-
-        // Find device by UID
-        guard let device = AudioInputManager.shared.findDevice(byUID: savedUID) else {
-            print("Saved input device not found, using system default")
-            return
-        }
-
-        // Get the audio unit from the input node
-        let audioUnit = inputNode.audioUnit!
-
-        // Set the device
-        var deviceID = device.id
-        let status = AudioUnitSetProperty(
-            audioUnit,
-            kAudioOutputUnitProperty_CurrentDevice,
-            kAudioUnitScope_Global,
-            0,
-            &deviceID,
-            UInt32(MemoryLayout<AudioDeviceID>.size)
-        )
-
-        if status == noErr {
-            print("Set input device to: \(device.name)")
-        } else {
-            print("Failed to set input device: \(status)")
         }
     }
 }

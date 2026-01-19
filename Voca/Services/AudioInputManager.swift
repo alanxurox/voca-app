@@ -19,7 +19,7 @@ class AudioInputManager {
 
     /// Get all available audio input devices
     func getInputDevices() -> [AudioInputDevice] {
-        var devices = [AudioInputDevice.systemDefault]
+        var devices = [AudioInputDevice]()
 
         var propertyAddress = AudioObjectPropertyAddress(
             mSelector: kAudioHardwarePropertyDevices,
@@ -83,24 +83,6 @@ class AudioInputManager {
         )
 
         return status == noErr ? deviceID : nil
-    }
-
-    /// Set the input device for the audio engine
-    func setInputDevice(_ device: AudioInputDevice, for audioUnit: AudioUnit) -> Bool {
-        // System default means don't override
-        guard device.id != 0 else { return true }
-
-        var deviceID = device.id
-        let status = AudioUnitSetProperty(
-            audioUnit,
-            kAudioOutputUnitProperty_CurrentDevice,
-            kAudioUnitScope_Global,
-            0,
-            &deviceID,
-            UInt32(MemoryLayout<AudioDeviceID>.size)
-        )
-
-        return status == noErr
     }
 
     // MARK: - Private Helpers

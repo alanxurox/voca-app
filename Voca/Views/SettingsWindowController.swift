@@ -288,15 +288,29 @@ class SettingsView: NSView {
         let devices = audioInputManager.getInputDevices()
         let currentUID = AppSettings.shared.inputDeviceUID
 
+        // Add "System Default" first (uses whatever macOS selects)
+        inputPopup.addItem(withTitle: NSLocalizedString("System Default", comment: ""))
+        inputPopup.lastItem?.representedObject = ""
+
+        // Add all hardware devices
         for device in devices {
             inputPopup.addItem(withTitle: device.name)
             inputPopup.lastItem?.representedObject = device.uid
+        }
 
-            let isSelected = (device.uid == currentUID) ||
-                            (device.uid.isEmpty && currentUID.isEmpty)
-            if isSelected {
-                inputPopup.select(inputPopup.lastItem)
+        // Select saved device or default to first item (System Default)
+        var selected = false
+        if !currentUID.isEmpty {
+            for i in 0..<inputPopup.numberOfItems {
+                if let uid = inputPopup.item(at: i)?.representedObject as? String, uid == currentUID {
+                    inputPopup.selectItem(at: i)
+                    selected = true
+                    break
+                }
             }
+        }
+        if !selected {
+            inputPopup.selectItem(at: 0)
         }
     }
 
@@ -397,11 +411,7 @@ class SettingsView: NSView {
     }
 
     @objc private func openAccessibilitySettings() {
-        // Prompt for accessibility permission
-        let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
-        AXIsProcessTrustedWithOptions(options)
-
-        // Also open System Settings > Privacy > Accessibility
+        // Open System Settings directly without showing Apple's popup
         if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
             NSWorkspace.shared.open(url)
         }

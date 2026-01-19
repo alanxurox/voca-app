@@ -148,7 +148,16 @@ class StatusBarController: NSObject {
     }
 
     @objc private func historyItemClicked(_ sender: NSMenuItem) {
-        guard let text = sender.representedObject as? String else { return }
+        // Handle both old format (string) and new format (dictionary)
+        let text: String
+        if let dict = sender.representedObject as? [String: Any],
+           let t = dict["text"] as? String {
+            text = t
+        } else if let t = sender.representedObject as? String {
+            text = t
+        } else {
+            return
+        }
 
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
@@ -289,22 +298,23 @@ extension StatusBarController: NSMenuDelegate {
         // Update hint text in case shortcut changed
         updateHintText()
 
-        // Remove old history items (tags 201+)
-        while let item = menu.item(withTag: 201) {
-            menu.removeItem(item)
+        // Remove old history items (tags 201+ and play buttons 301+)
+        for tag in 201...210 {
+            while let item = menu.item(withTag: tag) {
+                menu.removeItem(item)
+            }
         }
-        while let item = menu.item(withTag: 202) {
-            menu.removeItem(item)
-        }
-        while let item = menu.item(withTag: 203) {
-            menu.removeItem(item)
+        for tag in 301...310 {
+            while let item = menu.item(withTag: tag) {
+                menu.removeItem(item)
+            }
         }
         while let item = menu.item(withTag: 204) {  // Header
             menu.removeItem(item)
         }
 
-        // Get history
-        let history = historyManager.getAll()
+        // Get history items
+        let historyItems = historyManager.getAllItems()
 
         // Find insertion point (after separator with tag 200)
         guard let separatorIndex = menu.items.firstIndex(where: { $0.tag == 200 }) else { return }
@@ -317,19 +327,45 @@ extension StatusBarController: NSMenuDelegate {
         menu.insertItem(header, at: insertIndex)
         insertIndex += 1
 
-        // Add history items if any
-        for (i, text) in history.prefix(3).enumerated() {
-            let preview = truncateToWidth(text, maxWidth: 200)
+        // Add history items with play buttons if any
+        for (i, historyItem) in historyItems.prefix(5).enumerated() {
+            // Create submenu for each history item
+            let preview = truncateToWidth(historyItem.text, maxWidth: 180)
+            let hasAudio = historyItem.audioURL != nil
+
+            // Main item - click to paste
             let item = NSMenuItem(
-                title: "  \(preview)",
+                title: hasAudio ? "  \(preview)" : "  \(preview)",
                 action: #selector(historyItemClicked(_:)),
                 keyEquivalent: ""
             )
             item.target = self
-            item.representedObject = text
+            item.representedObject = ["text": historyItem.text, "index": i]
             item.tag = 201 + i
+
+            // Add play button as submenu if audio exists
+            if hasAudio {
+                let submenu = NSMenu()
+                let pasteItem = NSMenuItem(title: "Paste", action: #selector(historyItemClicked(_:)), keyEquivalent: "")
+                pasteItem.target = self
+                pasteItem.representedObject = ["text": historyItem.text, "index": i]
+
+                let playItem = NSMenuItem(title: "Play Recording", action: #selector(playHistoryAudio(_:)), keyEquivalent: "")
+                playItem.target = self
+                playItem.representedObject = i
+
+                submenu.addItem(pasteItem)
+                submenu.addItem(playItem)
+                item.submenu = submenu
+            }
+
             menu.insertItem(item, at: insertIndex)
             insertIndex += 1
         }
+    }
+
+    @objc private func playHistoryAudio(_ sender: NSMenuItem) {
+        guard let index = sender.representedObject as? Int else { return }
+        historyManager.playAudio(at: index)
     }
 }
