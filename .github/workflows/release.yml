@@ -93,8 +93,10 @@ jobs:
           codesign --force --options runtime --timestamp --sign "$IDENTITY" \
             "$SPARKLE_PATH"
 
-          # Re-sign the main app
-          codesign --force --options runtime --timestamp --sign "$IDENTITY" "$APP_PATH"
+          # Re-sign the main app with entitlements preserved
+          codesign --force --options runtime --timestamp \
+            --entitlements VocaApp/VocaApp.entitlements \
+            --sign "$IDENTITY" "$APP_PATH"
 
           # Verify
           codesign --verify --deep --strict "$APP_PATH"
