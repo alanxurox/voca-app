@@ -87,13 +87,64 @@ class HistoryManager {
             return
         }
 
+        guard FileManager.default.fileExists(atPath: audioURL.path) else {
+            print("Audio file not found: \(audioURL.path)")
+            return
+        }
+
         do {
             audioPlayer?.stop()
             audioPlayer = try AVAudioPlayer(contentsOf: audioURL)
             audioPlayer?.play()
             print("Playing: \(audioURL.lastPathComponent)")
         } catch {
-            print("Failed to play audio: \(error)")
+            print("Direct playback failed: \(error), trying conversion...")
+            playWithConversion(audioURL)
+        }
+    }
+
+    private func playWithConversion(_ url: URL) {
+        do {
+            let audioFile = try AVAudioFile(forReading: url)
+            let format = audioFile.processingFormat
+            let frameCount = AVAudioFrameCount(audioFile.length)
+
+            guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frameCount) else { return }
+            try audioFile.read(into: buffer)
+
+            guard let int16Format = AVAudioFormat(
+                commonFormat: .pcmFormatInt16,
+                sampleRate: format.sampleRate,
+                channels: format.channelCount,
+                interleaved: true
+            ) else { return }
+
+            guard let converter = AVAudioConverter(from: format, to: int16Format) else { return }
+            guard let outputBuffer = AVAudioPCMBuffer(pcmFormat: int16Format, frameCapacity: frameCount) else { return }
+
+            var error: NSError?
+            converter.convert(to: outputBuffer, error: &error) { _, outStatus in
+                outStatus.pointee = .haveData
+                return buffer
+            }
+
+            if let error = error {
+                print("Conversion failed: \(error)")
+                return
+            }
+
+            let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent("playback_\(UUID().uuidString).wav")
+            let outputFile = try AVAudioFile(forWriting: tempURL, settings: int16Format.settings)
+            try outputFile.write(from: outputBuffer)
+
+            audioPlayer = try AVAudioPlayer(contentsOf: tempURL)
+            audioPlayer?.play()
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + Double(frameCount) / format.sampleRate + 1.0) {
+                try? FileManager.default.removeItem(at: tempURL)
+            }
+        } catch {
+            print("Fallback playback failed: \(error)")
         }
     }
 
