@@ -56,7 +56,13 @@ public func testPlayback(url: URL) -> (success: Bool, error: String?) {
             }
 
             var convError: NSError?
+            var inputConsumed = false
             converter.convert(to: outputBuffer, error: &convError) { _, outStatus in
+                if inputConsumed {
+                    outStatus.pointee = .endOfStream
+                    return nil
+                }
+                inputConsumed = true
                 outStatus.pointee = .haveData
                 return buffer
             }
