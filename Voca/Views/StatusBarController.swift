@@ -262,6 +262,12 @@ class StatusBarController: NSObject {
         }
     }
 
+    @objc private func playHistoryAudio(_ sender: NSMenuItem) {
+        guard let dict = sender.representedObject as? [String: Any],
+              let index = dict["index"] as? Int else { return }
+        historyManager.playAudio(at: index)
+    }
+
     // MARK: - Update Checker
 
     @objc private func checkForUpdates() {
@@ -330,9 +336,10 @@ extension StatusBarController: NSMenuDelegate {
         menu.insertItem(header, at: insertIndex)
         insertIndex += 1
 
-        // Add history items - simple click to paste
+        // Add history items - with submenu for audio, simple click to paste otherwise
         for (i, historyItem) in historyItems.prefix(5).enumerated() {
             let preview = truncateToWidth(historyItem.text, maxWidth: 200)
+            let representedObject: [String: Any] = ["text": historyItem.text, "index": i]
 
             let item = NSMenuItem(
                 title: "  \(preview)",
@@ -340,8 +347,33 @@ extension StatusBarController: NSMenuDelegate {
                 keyEquivalent: ""
             )
             item.target = self
-            item.representedObject = historyItem.text
+            item.representedObject = representedObject
             item.tag = 201 + i
+
+            if historyItem.audioURL != nil {
+                let submenu = NSMenu()
+
+                let copyItem = NSMenuItem(
+                    title: NSLocalizedString("Copy to Clipboard", comment: ""),
+                    action: #selector(historyItemClicked(_:)),
+                    keyEquivalent: ""
+                )
+                copyItem.target = self
+                copyItem.representedObject = representedObject
+
+                let playItem = NSMenuItem(
+                    title: NSLocalizedString("Play Audio", comment: ""),
+                    action: #selector(playHistoryAudio(_:)),
+                    keyEquivalent: ""
+                )
+                playItem.target = self
+                playItem.representedObject = representedObject
+
+                submenu.addItem(copyItem)
+                submenu.addItem(playItem)
+                item.submenu = submenu
+                item.action = nil  // parent item opens submenu, not pastes
+            }
 
             menu.insertItem(item, at: insertIndex)
             insertIndex += 1
