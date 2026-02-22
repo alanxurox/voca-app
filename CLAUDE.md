@@ -22,7 +22,12 @@ xcodebuild build -project VocaApp.xcodeproj -scheme Voca -configuration Debug CO
 git tag v1.x.x && git push origin v1.x.x
 ```
 
-No tests exist.
+SPM test target in `Sources/VocaTestable/` + `Tests/VocaTests/` — 22 tests covering VAD logic, text post-processing, and audio utils. Tests do NOT cover VoicePipeline (KMP binary), Sparkle, or hardware audio.
+
+```bash
+# Run tests (swift test fails on Sparkle — use xcrun directly)
+swift build --target VocaTests && xcrun xctest .build/arm64-apple-macosx/debug/VocaPackageTests.xctest
+```
 
 ## Workflow
 
