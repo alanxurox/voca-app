@@ -5,7 +5,8 @@ let package = Package(
     name: "Voca",
     platforms: [.macOS(.v13)],
     products: [
-        .library(name: "VocaLib", targets: ["VocaLib"])
+        .library(name: "VocaLib", targets: ["VocaLib"]),
+        .library(name: "VocaTestable", targets: ["VocaTestable"])
     ],
     targets: [
         .binaryTarget(
@@ -17,6 +18,17 @@ let package = Package(
             dependencies: ["VoicePipeline"],
             path: "Voca",
             resources: [.copy("Resources")]
+        ),
+        .target(
+            name: "VocaTestable",
+            dependencies: [],
+            path: "Sources/VocaTestable"
+        ),
+        .testTarget(
+            name: "VocaTests",
+            dependencies: ["VocaTestable"],
+            path: "Tests/VocaTests",
+            resources: [.copy("Fixtures")]
         )
     ]
 )
