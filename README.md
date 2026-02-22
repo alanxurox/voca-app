@@ -97,6 +97,13 @@ Voca includes multiple ASR models optimized for different use cases:
 
 Voca processes all audio locally on your Mac using CoreML. No audio data is ever sent to external servers. Your voice stays on your device.
 
+## TODO
+
+- [ ] Fix audio cut-off bug (understand VAD chunking first, not flush threshold)
+- [ ] Fix history playback button
+- [ ] Research hot words support (whisper turbo / parakeet)
+- [ ] Editable bubble before paste (like WeChat voice-to-text)
+
 ## License
 
 MIT License - Free and open source
