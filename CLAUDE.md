@@ -28,6 +28,11 @@ No tests exist.
 
 - **Never commit directly to main.** Use feature branches + PRs.
 - Release tags go on main after PR merge.
+- **Before tagging a release:**
+  1. `xcodebuild build` must pass (catches syntax/type errors)
+  2. Launch the app locally and manually verify the change works
+  3. PR must be reviewed/merged before tagging
+- No "build and tag in the same session" — build, test, then tag separately.
 
 ## CI/CD
 
