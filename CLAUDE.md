@@ -35,21 +35,15 @@ swift build --build-tests && xcrun xctest .build/arm64-apple-macosx/debug/VocaPa
 - Release tags go on main after PR merge.
 - **Before merging a PR:**
   1. Run SPM tests: `swift build --build-tests && xcrun xctest .build/arm64-apple-macosx/debug/VocaPackageTests.xctest`
-  2. Run code-reviewer agent (or manual review) for non-trivial changes
-  3. User must explicitly approve the merge — AI must never auto-merge
+  2. Code review (manual or automated) for non-trivial changes
+  3. Explicit approval before merge — AI tools must never auto-merge
 - **Before tagging a release:**
   1. PR must pass CI build checks (GitHub runs `xcodebuild` on `macos-14` runners)
   2. Launch the app locally and manually verify the change works
   3. PR must be merged before tagging
 - No "build and tag in the same session" — verify CI green, manual test, then tag.
 
-## AI Development Guidelines
-
-### Review Gates (Required Before Merge)
-- SPM test suite must pass (30+ tests covering VAD, text processing, audio playback)
-- Code review via `code-reviewer` agent for any non-trivial changes
-- User explicit approval before merging to main
-- For release PRs: also require manual app testing by user
+## Testing
 
 ### CLI Testing Philosophy
 The SPM architecture (VocaTestable + VocaTests) exists so AI can verify features from CLI without:
@@ -75,16 +69,6 @@ print("\(f.lastPathComponent) — \(p.duration)s"); p.play(); Thread.sleep(forTi
 '
 ```
 
-### Available Expert Agents
-These agents are available via oh-my-claudecode for specialized review:
-- `code-reviewer`: Comprehensive code review across concerns
-- `security-reviewer`: Vulnerability detection, auth/crypto checks
-- `quality-reviewer`: Logic defects, anti-patterns, SOLID principles
-- `performance-reviewer`: Hotspots, complexity analysis
-- `build-fixer`: Build/type errors with minimal changes
-- `test-engineer`: Test strategy, coverage, flaky test hardening
-
-Always run code-reviewer before merging feature PRs. Use security-reviewer for changes touching auth, licensing, or permissions.
 
 ## CI/CD
 
