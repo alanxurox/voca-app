@@ -449,10 +449,11 @@ class OnboardingView: NSView {
     }
 
     @objc private func grantAccessibilityPermission() {
-        // Open System Settings directly without showing Apple's popup
-        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
-            NSWorkspace.shared.open(url)
-        }
+        // Use AXIsProcessTrustedWithOptions to trigger Apple's native prompt.
+        // This ensures the TCC entry matches the CURRENT binary's code signature,
+        // which matters after app updates that change the signature.
+        let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
+        AXIsProcessTrustedWithOptions(options)
     }
 
     @objc private func refreshPermissions() {

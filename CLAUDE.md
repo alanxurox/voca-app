@@ -69,4 +69,4 @@ Hotkey → `AudioRecorder` (16kHz mono, energy VAD) → speech segments on 1.2s 
 - macOS 13.0+, universal binary (arm64 + x86_64)
 - Localization: `NSLocalizedString()`, 5 languages (en, zh-Hans, ja, ko, es)
 - Sparkle feed: `https://voca.zhengyishen.com/appcast.xml`
-- Git remotes: `origin` = `zhengyishen0/voca-app`, `fork` = `alanxurox/voca-app` (legacy)
+- Repo: `zhengyishen0/voca-app`
