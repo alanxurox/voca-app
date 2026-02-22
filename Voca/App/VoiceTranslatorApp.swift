@@ -482,7 +482,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func pasteFromHistory() {
-        if let text = historyManager.getNext() {
+        if let text = historyManager.nextItem() {
             pasteText(text)
         }
     }

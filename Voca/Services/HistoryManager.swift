@@ -25,9 +25,8 @@ class HistoryManager: NSObject, AVAudioPlayerDelegate {
     }()
 
     func add(_ text: String, audioURL: URL? = nil) {
-        var savedAudioURL: URL? = nil
+        var savedAudioURL: URL?
 
-        // Copy audio file to permanent storage if provided
         if let sourceURL = audioURL {
             let filename = "recording_\(Date().timeIntervalSince1970).wav"
             let destURL = recordingsDir.appendingPathComponent(filename)
@@ -42,67 +41,62 @@ class HistoryManager: NSObject, AVAudioPlayerDelegate {
 
         let item = HistoryItem(text: text, audioURL: savedAudioURL, timestamp: Date())
 
-        // Add to front, remove oldest if over limit
         history.insert(item, at: 0)
         if history.count > maxItems {
-            // Delete old audio file before removing
             if let oldAudioURL = history.last?.audioURL {
                 try? FileManager.default.removeItem(at: oldAudioURL)
             }
             history.removeLast()
         }
-        // Reset index for cycling
         currentIndex = -1
 
-        // Notify observers
         DispatchQueue.main.async {
             NotificationCenter.default.post(name: .historyDidUpdate, object: nil)
         }
     }
 
-    func getNext() -> String? {
+    func nextItem() -> String? {
         guard !history.isEmpty else { return nil }
 
         currentIndex = (currentIndex + 1) % history.count
         return history[currentIndex].text
     }
 
-    func getAll() -> [String] {
-        return history.map { $0.text }
-    }
+    var allItems: [HistoryItem] { history }
 
-    func getAllItems() -> [HistoryItem] {
-        return history
-    }
-
-    func getItem(at index: Int) -> HistoryItem? {
+    func item(at index: Int) -> HistoryItem? {
         guard index >= 0 && index < history.count else { return nil }
         return history[index]
     }
 
-    /// Play the audio recording for a history item
+    /// Play the audio recording for a history item by index
     func playAudio(at index: Int) {
-        guard let item = getItem(at: index),
+        guard let item = item(at: index),
               let audioURL = item.audioURL else {
-            print("No audio available for this item")
+            print("playAudio(at:): no audio for index \(index)")
+            return
+        }
+        playAudio(url: audioURL)
+    }
+
+    /// Play audio directly from a URL (preferred — avoids stale index issues)
+    func playAudio(url: URL) {
+        guard FileManager.default.fileExists(atPath: url.path) else {
+            print("playAudio(url:): file not found: \(url.path)")
             return
         }
 
-        guard FileManager.default.fileExists(atPath: audioURL.path) else {
-            print("Audio file not found: \(audioURL.path)")
-            return
-        }
+        audioPlayer?.delegate = nil
+        audioPlayer?.stop()
+        cleanupTempPlayback()
 
         do {
-            audioPlayer?.stop()
-            cleanupTempPlayback()
-            audioPlayer = try AVAudioPlayer(contentsOf: audioURL)
+            audioPlayer = try AVAudioPlayer(contentsOf: url)
             audioPlayer?.delegate = self
             audioPlayer?.play()
-            print("Playing: \(audioURL.lastPathComponent)")
         } catch {
             print("Direct playback failed: \(error), trying conversion...")
-            playWithConversion(audioURL)
+            playWithConversion(url)
         }
     }
 
@@ -112,7 +106,10 @@ class HistoryManager: NSObject, AVAudioPlayerDelegate {
             let format = audioFile.processingFormat
             let frameCount = AVAudioFrameCount(audioFile.length)
 
-            guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frameCount) else { return }
+            guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frameCount) else {
+                print("playWithConversion: failed to create input buffer")
+                return
+            }
             try audioFile.read(into: buffer)
 
             guard let int16Format = AVAudioFormat(
@@ -120,10 +117,19 @@ class HistoryManager: NSObject, AVAudioPlayerDelegate {
                 sampleRate: format.sampleRate,
                 channels: format.channelCount,
                 interleaved: true
-            ) else { return }
+            ) else {
+                print("playWithConversion: failed to create int16 format")
+                return
+            }
 
-            guard let converter = AVAudioConverter(from: format, to: int16Format) else { return }
-            guard let outputBuffer = AVAudioPCMBuffer(pcmFormat: int16Format, frameCapacity: frameCount) else { return }
+            guard let converter = AVAudioConverter(from: format, to: int16Format) else {
+                print("playWithConversion: failed to create converter")
+                return
+            }
+            guard let outputBuffer = AVAudioPCMBuffer(pcmFormat: int16Format, frameCapacity: frameCount) else {
+                print("playWithConversion: failed to create output buffer")
+                return
+            }
 
             var inputConsumed = false
             var error: NSError?
@@ -170,13 +176,14 @@ class HistoryManager: NSObject, AVAudioPlayerDelegate {
 
     /// Stop any currently playing audio
     func stopAudio() {
+        audioPlayer?.delegate = nil
         audioPlayer?.stop()
         audioPlayer = nil
         cleanupTempPlayback()
     }
 
     func clear() {
-        // Delete all audio files
+        stopAudio()
         for item in history {
             if let audioURL = item.audioURL {
                 try? FileManager.default.removeItem(at: audioURL)
