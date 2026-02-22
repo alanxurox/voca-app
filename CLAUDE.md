@@ -59,6 +59,22 @@ The SPM architecture (VocaTestable + VocaTests) exists so AI can verify features
 
 Test command: `swift build --build-tests && xcrun xctest .build/arm64-apple-macosx/debug/VocaPackageTests.xctest`
 
+**Ad-hoc audio playback test** (plays latest recording for N seconds):
+```bash
+swift -e '
+import AVFoundation; import Foundation
+let dir = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Library/Application Support/Voca/recordings")
+let files = try FileManager.default.contentsOfDirectory(at: dir, includingPropertiesForKeys: [.contentModificationDateKey])
+    .sorted { a, b in
+        let ad = (try? a.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate) ?? .distantPast
+        let bd = (try? b.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate) ?? .distantPast
+        return ad > bd }
+guard let f = files.first else { print("No recordings"); exit(1) }
+let p = try AVAudioPlayer(contentsOf: f)
+print("\(f.lastPathComponent) — \(p.duration)s"); p.play(); Thread.sleep(forTimeInterval: 10); p.stop()
+'
+```
+
 ### Available Expert Agents
 These agents are available via oh-my-claudecode for specialized review:
 - `code-reviewer`: Comprehensive code review across concerns
