@@ -521,7 +521,7 @@ class SettingsView: NSView {
         // Clear existing items
         historyStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
 
-        let items = historyManager.getAllItems()
+        let items = historyManager.allItems
 
         if items.isEmpty {
             let emptyLabel = NSTextField(labelWithString: NSLocalizedString("No transcriptions yet", comment: ""))

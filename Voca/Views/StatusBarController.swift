@@ -222,16 +222,8 @@ class StatusBarController: NSObject {
     }
 
     @objc private func historyItemClicked(_ sender: NSMenuItem) {
-        // Handle both old format (string) and new format (dictionary)
-        let text: String
-        if let dict = sender.representedObject as? [String: Any],
-           let t = dict["text"] as? String {
-            text = t
-        } else if let t = sender.representedObject as? String {
-            text = t
-        } else {
-            return
-        }
+        guard let dict = sender.representedObject as? [String: Any],
+              let text = dict["text"] as? String else { return }
 
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
@@ -264,8 +256,32 @@ class StatusBarController: NSObject {
 
     @objc private func playHistoryAudio(_ sender: NSMenuItem) {
         guard let dict = sender.representedObject as? [String: Any],
-              let index = dict["index"] as? Int else { return }
-        historyManager.playAudio(at: index)
+              let audioURL = dict["audioURL"] as? URL else { return }
+        historyManager.playAudio(url: audioURL)
+    }
+
+    private func makeAudioSubmenu(representedObject: [String: Any]) -> NSMenu {
+        let submenu = NSMenu()
+
+        let copyItem = NSMenuItem(
+            title: NSLocalizedString("Copy to Clipboard", comment: ""),
+            action: #selector(historyItemClicked(_:)),
+            keyEquivalent: ""
+        )
+        copyItem.target = self
+        copyItem.representedObject = representedObject
+
+        let playItem = NSMenuItem(
+            title: NSLocalizedString("Play Audio", comment: ""),
+            action: #selector(playHistoryAudio(_:)),
+            keyEquivalent: ""
+        )
+        playItem.target = self
+        playItem.representedObject = representedObject
+
+        submenu.addItem(copyItem)
+        submenu.addItem(playItem)
+        return submenu
     }
 
     // MARK: - Update Checker
@@ -312,18 +328,14 @@ extension StatusBarController: NSMenuDelegate {
         // Update hint text in case shortcut changed
         updateHintText()
 
-        // Remove old history items (tags 201+)
+        // Remove old history items (tags 201–210) and header (tag 204)
         for tag in 201...210 {
             while let item = menu.item(withTag: tag) {
                 menu.removeItem(item)
             }
         }
-        while let item = menu.item(withTag: 204) {  // Header
-            menu.removeItem(item)
-        }
 
-        // Get history items
-        let historyItems = historyManager.getAllItems()
+        let historyItems = historyManager.allItems
 
         // Find insertion point (after separator with tag 200)
         guard let separatorIndex = menu.items.firstIndex(where: { $0.tag == 200 }) else { return }
@@ -339,7 +351,10 @@ extension StatusBarController: NSMenuDelegate {
         // Add history items - with submenu for audio, simple click to paste otherwise
         for (i, historyItem) in historyItems.prefix(5).enumerated() {
             let preview = truncateToWidth(historyItem.text, maxWidth: 200)
-            let representedObject: [String: Any] = ["text": historyItem.text, "index": i]
+            var representedObject: [String: Any] = ["text": historyItem.text]
+            if let audioURL = historyItem.audioURL {
+                representedObject["audioURL"] = audioURL
+            }
 
             let item = NSMenuItem(
                 title: "  \(preview)",
@@ -351,28 +366,8 @@ extension StatusBarController: NSMenuDelegate {
             item.tag = 201 + i
 
             if historyItem.audioURL != nil {
-                let submenu = NSMenu()
-
-                let copyItem = NSMenuItem(
-                    title: NSLocalizedString("Copy to Clipboard", comment: ""),
-                    action: #selector(historyItemClicked(_:)),
-                    keyEquivalent: ""
-                )
-                copyItem.target = self
-                copyItem.representedObject = representedObject
-
-                let playItem = NSMenuItem(
-                    title: NSLocalizedString("Play Audio", comment: ""),
-                    action: #selector(playHistoryAudio(_:)),
-                    keyEquivalent: ""
-                )
-                playItem.target = self
-                playItem.representedObject = representedObject
-
-                submenu.addItem(copyItem)
-                submenu.addItem(playItem)
-                item.submenu = submenu
-                item.action = nil  // parent item opens submenu, not pastes
+                item.submenu = makeAudioSubmenu(representedObject: representedObject)
+                item.action = nil
             }
 
             menu.insertItem(item, at: insertIndex)

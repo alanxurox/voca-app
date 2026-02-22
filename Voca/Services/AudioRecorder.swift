@@ -108,7 +108,9 @@ class AudioRecorder {
             let segment = sampleBuffer
             sampleBuffer = []
             print("📝 Flushing final segment: \(segment.count) samples")
-            onSpeechSegment?(segment)
+            DispatchQueue.main.async { [weak self] in
+                self?.onSpeechSegment?(segment)
+            }
         }
 
         print("Recording stopped")
