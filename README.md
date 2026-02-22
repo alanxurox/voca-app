@@ -97,6 +97,41 @@ Voca includes multiple ASR models optimized for different use cases:
 
 Voca processes all audio locally on your Mac using CoreML. No audio data is ever sent to external servers. Your voice stays on your device.
 
+## Development
+
+### Roadmap
+
+**Audio Pipeline**
+- Rollback audio chunking to pre-live-streaming version (bigger chunks = more accurate)
+- Fix last chunk dropout bug (flush threshold fixed, needs verification)
+- Investigate optimal chunk size vs accuracy tradeoff
+- Consider disabling live streaming preview entirely (accuracy tradeoff)
+- Add macOS mic mode awareness (Voice Isolation may degrade transcription)
+
+**ASR Models**
+- Compare model accuracy: test same audio against Parakeet, Whisper Turbo, SenseVoice
+- Research external accuracy benchmarks (Doubao, WeChat, OpenAI Whisper API)
+- Test new ASR models: Qwen 3.5 transcription, HuggingFace models
+- Explore small model post-processing for accuracy
+
+**Testing**
+- Add SPM-based automated testing (VAD logic, text post-processing, audio chunking)
+- Build VAD parameter comparison suite
+
+**Features**
+- Fix recording playback in History
+- Start new features after major bugs fixed
+
+### Building
+
+```bash
+# Debug build
+xcodebuild build -project VocaApp.xcodeproj -scheme Voca -configuration Debug CODE_SIGN_IDENTITY="-" CODE_SIGNING_REQUIRED=NO
+
+# Run tests (swift test fails on Sparkle — use xcrun directly)
+swift build --target VocaTests && xcrun xctest .build/arm64-apple-macosx/debug/VocaPackageTests.xctest
+```
+
 ## License
 
 MIT License - Free and open source
