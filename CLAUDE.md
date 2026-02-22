@@ -19,10 +19,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 xcodebuild build -project VocaApp.xcodeproj -scheme Voca -configuration Debug CODE_SIGN_IDENTITY="-" CODE_SIGNING_REQUIRED=NO
 
 # Release: tag triggers CI
-git tag v1.x.x && git push upstream v1.x.x
+git tag v1.x.x && git push origin v1.x.x
 ```
 
 No tests exist.
+
+## Workflow
+
+- **Never commit directly to main.** Use feature branches + PRs.
+- Release tags go on main after PR merge.
 
 ## CI/CD
 
@@ -70,3 +75,9 @@ Hotkey → `AudioRecorder` (16kHz mono, energy VAD) → speech segments on 1.2s 
 - Localization: `NSLocalizedString()`, 5 languages (en, zh-Hans, ja, ko, es)
 - Sparkle feed: `https://voca.zhengyishen.com/appcast.xml`
 - Repo: `zhengyishen0/voca-app`
+
+## Known Gotchas
+
+- **TCC is per-signature**: Re-signing the binary (e.g., adding `--entitlements`) invalidates macOS accessibility permissions. Use `AXIsProcessTrustedWithOptions(prompt: true)` to re-prompt correctly, not just opening System Settings.
+- **Model switching is a no-op**: `Transcriber.setModel()` does nothing — KMP `ASREngine` has no model selection API. Always uses the model loaded at startup.
+- **`swift build` fails on Sparkle imports**: Expected. Use `xcodebuild` for full builds.
