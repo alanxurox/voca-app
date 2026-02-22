@@ -101,8 +101,10 @@ class AudioRecorder {
         audioFile = nil
         isRecording = false
 
-        // Process any remaining speech in buffer (call synchronously so it runs before completion)
-        if !sampleBuffer.isEmpty && sampleBuffer.count > Int(sampleRate * minSpeechDuration) {
+        // Flush any remaining speech in buffer (user explicitly stopped, so use a lower
+        // threshold than live VAD — don't drop short final phrases like "thank you")
+        let minFlushSamples = Int(sampleRate * 0.15)  // 150ms minimum for final flush
+        if sampleBuffer.count > minFlushSamples {
             let segment = sampleBuffer
             sampleBuffer = []
             print("📝 Flushing final segment: \(segment.count) samples")

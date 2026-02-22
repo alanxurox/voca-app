@@ -240,8 +240,7 @@ jobs:
 
             ### Usage
 
-            - Double-tap ⌘ to start recording
-            - Release ⌘ to transcribe and auto-paste
+            - Hold ⌥ (Option) to record, release to transcribe and auto-paste
             - ⌃⌥V to paste from history
             - ESC to cancel during transcription
 

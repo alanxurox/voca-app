@@ -116,7 +116,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         transcriber.setModel(settings.selectedModel)
 
         print("Voca started")
-        print("Double-tap ⌘ to record, release to transcribe")
+        print("Hold ⌥ to record, release to transcribe")
         print("ESC to cancel | ⌃⌥V for history")
         print("─────────────────────────────────────")
 
@@ -326,17 +326,20 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         audioRecorder.stopRecording { [weak self] audioURL in
             guard let self = self else { return }
 
-            // Now clear the callback after stopRecording has flushed the buffer
-            self.audioRecorder.onSpeechSegment = nil
-            self.isIncrementalMode = false
+            // Don't null onSpeechSegment yet — a VAD segment dispatched to main just before
+            // stopRecording may still arrive. finishIncrementalTranscription will clean up
+            // after all pending segments complete. isIncrementalMode stays true so late-
+            // arriving dispatches from the audio thread are still processed.
 
-            // If we got incremental results, use those instead of re-transcribing
-            if !self.incrementalText.isEmpty {
+            // If we got incremental results (or have pending segments), use those
+            if !self.incrementalText.isEmpty || self.pendingSegments > 0 {
                 self.finishIncrementalTranscription(audioURL: audioURL)
                 return
             }
 
-            // Otherwise, fall back to full transcription
+            // No incremental results — clean up and fall back to full transcription
+            self.audioRecorder.onSpeechSegment = nil
+            self.isIncrementalMode = false
             guard let url = audioURL else {
                 print("✗ No audio")
                 self.recordingOverlay.hide()
@@ -356,6 +359,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             }
             return
         }
+
+        // All segments processed — safe to clean up callbacks now
+        audioRecorder.onSpeechSegment = nil
+        isIncrementalMode = false
 
         recordingOverlay.hide()
         statusBarController.setState(.idle)
