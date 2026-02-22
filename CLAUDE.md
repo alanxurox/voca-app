@@ -22,53 +22,32 @@ xcodebuild build -project VocaApp.xcodeproj -scheme Voca -configuration Debug CO
 git tag v1.x.x && git push origin v1.x.x
 ```
 
-SPM test target in `Sources/VocaTestable/` + `Tests/VocaTests/` — 30 tests covering VAD logic, text post-processing, audio playback, and WAV I/O. Tests do NOT cover VoicePipeline (KMP binary), Sparkle, or hardware audio.
-
-```bash
-# Run tests (swift test fails on Sparkle — use xcrun directly)
-swift build --build-tests && xcrun xctest .build/arm64-apple-macosx/debug/VocaPackageTests.xctest
-```
-
 ## Workflow
 
 - **Never commit directly to main.** Use feature branches + PRs.
 - Release tags go on main after PR merge.
 - **Before merging a PR:**
-  1. Run SPM tests: `swift build --build-tests && xcrun xctest .build/arm64-apple-macosx/debug/VocaPackageTests.xctest`
-  2. Code review (manual or automated) for non-trivial changes
-  3. Explicit approval before merge — AI tools must never auto-merge
+  1. Code review (manual or automated) for non-trivial changes
+  2. Explicit approval before merge — AI tools must never auto-merge
 - **Before tagging a release:**
   1. PR must pass CI build checks (GitHub runs `xcodebuild` on `macos-14` runners)
   2. Launch the app locally and manually verify the change works
   3. PR must be merged before tagging
 - No "build and tag in the same session" — verify CI green, manual test, then tag.
 
-## Testing
+## Testing Philosophy
 
-### CLI Testing Philosophy
-The SPM architecture (VocaTestable + VocaTests) exists so AI can verify features from CLI without:
+SPM (Swift Package Manager) CLI-testable architecture allows AI to verify features without:
 - Launching the full Xcode app
 - Dealing with TCC permission resets (accessibility, microphone)
 - Manual GUI interaction
 
-Test command: `swift build --build-tests && xcrun xctest .build/arm64-apple-macosx/debug/VocaPackageTests.xctest`
-
-**Ad-hoc audio playback test** (plays latest recording for N seconds):
+When adding tests, create an SPM test target (`Sources/VocaTestable/` + `Tests/VocaTests/`) that can run via:
 ```bash
-swift -e '
-import AVFoundation; import Foundation
-let dir = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Library/Application Support/Voca/recordings")
-let files = try FileManager.default.contentsOfDirectory(at: dir, includingPropertiesForKeys: [.contentModificationDateKey])
-    .sorted { a, b in
-        let ad = (try? a.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate) ?? .distantPast
-        let bd = (try? b.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate) ?? .distantPast
-        return ad > bd }
-guard let f = files.first else { print("No recordings"); exit(1) }
-let p = try AVAudioPlayer(contentsOf: f)
-print("\(f.lastPathComponent) — \(p.duration)s"); p.play(); Thread.sleep(forTimeInterval: 10); p.stop()
-'
+swift build --build-tests && xcrun xctest .build/arm64-apple-macosx/debug/VocaPackageTests.xctest
 ```
 
+Note: `swift test` fails on Sparkle imports — use `xcrun xctest` directly.
 
 ## CI/CD
 
