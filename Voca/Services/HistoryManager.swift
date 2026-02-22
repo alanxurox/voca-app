@@ -7,13 +7,14 @@ struct HistoryItem {
     let timestamp: Date
 }
 
-class HistoryManager {
+class HistoryManager: NSObject, AVAudioPlayerDelegate {
     static let shared = HistoryManager()
 
     private var history: [HistoryItem] = []
     private var currentIndex: Int = -1
     private let maxItems = 10
     private var audioPlayer: AVAudioPlayer?
+    private var tempPlaybackURL: URL?
 
     // Directory for storing audio recordings
     private lazy var recordingsDir: URL = {
@@ -94,7 +95,9 @@ class HistoryManager {
 
         do {
             audioPlayer?.stop()
+            cleanupTempPlayback()
             audioPlayer = try AVAudioPlayer(contentsOf: audioURL)
+            audioPlayer?.delegate = self
             audioPlayer?.play()
             print("Playing: \(audioURL.lastPathComponent)")
         } catch {
@@ -122,9 +125,15 @@ class HistoryManager {
             guard let converter = AVAudioConverter(from: format, to: int16Format) else { return }
             guard let outputBuffer = AVAudioPCMBuffer(pcmFormat: int16Format, frameCapacity: frameCount) else { return }
 
+            var inputConsumed = false
             var error: NSError?
             converter.convert(to: outputBuffer, error: &error) { _, outStatus in
+                if inputConsumed {
+                    outStatus.pointee = .endOfStream
+                    return nil
+                }
                 outStatus.pointee = .haveData
+                inputConsumed = true
                 return buffer
             }
 
@@ -137,14 +146,25 @@ class HistoryManager {
             let outputFile = try AVAudioFile(forWriting: tempURL, settings: int16Format.settings)
             try outputFile.write(from: outputBuffer)
 
+            tempPlaybackURL = tempURL
             audioPlayer = try AVAudioPlayer(contentsOf: tempURL)
+            audioPlayer?.delegate = self
             audioPlayer?.play()
-
-            DispatchQueue.main.asyncAfter(deadline: .now() + Double(frameCount) / format.sampleRate + 1.0) {
-                try? FileManager.default.removeItem(at: tempURL)
-            }
         } catch {
             print("Fallback playback failed: \(error)")
+        }
+    }
+
+    // MARK: - AVAudioPlayerDelegate
+
+    func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
+        cleanupTempPlayback()
+    }
+
+    private func cleanupTempPlayback() {
+        if let url = tempPlaybackURL {
+            try? FileManager.default.removeItem(at: url)
+            tempPlaybackURL = nil
         }
     }
 
@@ -152,6 +172,7 @@ class HistoryManager {
     func stopAudio() {
         audioPlayer?.stop()
         audioPlayer = nil
+        cleanupTempPlayback()
     }
 
     func clear() {

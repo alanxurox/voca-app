@@ -22,22 +22,53 @@ xcodebuild build -project VocaApp.xcodeproj -scheme Voca -configuration Debug CO
 git tag v1.x.x && git push origin v1.x.x
 ```
 
-SPM test target in `Sources/VocaTestable/` + `Tests/VocaTests/` — 22 tests covering VAD logic, text post-processing, and audio utils. Tests do NOT cover VoicePipeline (KMP binary), Sparkle, or hardware audio.
+SPM test target in `Sources/VocaTestable/` + `Tests/VocaTests/` — 30 tests covering VAD logic, text post-processing, audio playback, and WAV I/O. Tests do NOT cover VoicePipeline (KMP binary), Sparkle, or hardware audio.
 
 ```bash
 # Run tests (swift test fails on Sparkle — use xcrun directly)
-swift build --target VocaTests && xcrun xctest .build/arm64-apple-macosx/debug/VocaPackageTests.xctest
+swift build --build-tests && xcrun xctest .build/arm64-apple-macosx/debug/VocaPackageTests.xctest
 ```
 
 ## Workflow
 
 - **Never commit directly to main.** Use feature branches + PRs.
 - Release tags go on main after PR merge.
+- **Before merging a PR:**
+  1. Run SPM tests: `swift build --build-tests && xcrun xctest .build/arm64-apple-macosx/debug/VocaPackageTests.xctest`
+  2. Run code-reviewer agent (or manual review) for non-trivial changes
+  3. User must explicitly approve the merge — AI must never auto-merge
 - **Before tagging a release:**
   1. PR must pass CI build checks (GitHub runs `xcodebuild` on `macos-14` runners)
   2. Launch the app locally and manually verify the change works
   3. PR must be merged before tagging
 - No "build and tag in the same session" — verify CI green, manual test, then tag.
+
+## AI Development Guidelines
+
+### Review Gates (Required Before Merge)
+- SPM test suite must pass (30+ tests covering VAD, text processing, audio playback)
+- Code review via `code-reviewer` agent for any non-trivial changes
+- User explicit approval before merging to main
+- For release PRs: also require manual app testing by user
+
+### CLI Testing Philosophy
+The SPM architecture (VocaTestable + VocaTests) exists so AI can verify features from CLI without:
+- Launching the full Xcode app
+- Dealing with TCC permission resets (accessibility, microphone)
+- Manual GUI interaction
+
+Test command: `swift build --build-tests && xcrun xctest .build/arm64-apple-macosx/debug/VocaPackageTests.xctest`
+
+### Available Expert Agents
+These agents are available via oh-my-claudecode for specialized review:
+- `code-reviewer`: Comprehensive code review across concerns
+- `security-reviewer`: Vulnerability detection, auth/crypto checks
+- `quality-reviewer`: Logic defects, anti-patterns, SOLID principles
+- `performance-reviewer`: Hotspots, complexity analysis
+- `build-fixer`: Build/type errors with minimal changes
+- `test-engineer`: Test strategy, coverage, flaky test hardening
+
+Always run code-reviewer before merging feature PRs. Use security-reviewer for changes touching auth, licensing, or permissions.
 
 ## CI/CD
 
