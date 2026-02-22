@@ -202,9 +202,20 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Save modified appcast.xml (we're on detached HEAD at the tag)
+          cp appcast.xml /tmp/appcast-updated.xml
+
+          # Fetch and checkout the actual main branch
+          git fetch origin main
+          git checkout origin/main -- appcast.xml || true
+          git checkout -B main origin/main
+
+          # Apply the updated appcast.xml onto main
+          cp /tmp/appcast-updated.xml appcast.xml
           git add appcast.xml
           git commit -m "Update appcast.xml for v${{ env.VERSION }}"
-          git push origin HEAD:main
+          git push origin main
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
