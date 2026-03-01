@@ -99,10 +99,17 @@ Voca processes all audio locally on your Mac using CoreML. No audio data is ever
 
 ## TODO
 
-- [ ] Fix audio cut-off bug (understand VAD chunking first, not flush threshold)
-- [ ] Fix history playback button
-- [ ] Research hot words support (whisper turbo / parakeet)
-- [ ] Editable bubble before paste (like WeChat voice-to-text)
+**Priority (per Zhengyi 2026-03-01):**
+- [x] ~~Fix history playback button~~ — Dropped (dev-only feature)
+- [ ] Fix audio cut-off bug — VAD chunking fix on `fix/audio-cutoff-bug` branch, testing
+- [ ] Hot words support — Post-processing correction map in Transcriber.swift (Whisper/Parakeet)
+- [ ] Editable bubble before paste — Future (like WeChat voice-to-text)
+- [ ] Voice isolation — Future (Silero VAD, multi-mic spatial direction)
+
+**Research completed:**
+- Apple macOS 26 SpeechAnalyzer API (future migration path)
+- Voice isolation > noise cancellation for ASR accuracy
+- `setVoiceProcessingEnabled(true)` quick win (2 lines)
 
 ## License
 
