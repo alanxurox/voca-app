@@ -2,7 +2,9 @@ import Cocoa
 import VoicePipeline
 import ApplicationServices
 import AVFoundation
+#if canImport(Sparkle)
 import Sparkle
+#endif
 
 private var appDelegateRef: AppDelegate?
 
@@ -25,8 +27,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var recordingOverlay: RecordingOverlay!
     private var asrEngine: ASREngine!
 
+    #if canImport(Sparkle)
     // Sparkle updater
     private var updaterController: SPUStandardUpdaterController!
+#endif
 
     private var totalStartTime: Date?
     private var isTranscribing = false
@@ -89,9 +93,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         audioRecorder = AudioRecorder()
         recordingOverlay = RecordingOverlay()
 
+        #if canImport(Sparkle)
         // Initialize Sparkle updater
         updaterController = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: UpdateChecker.shared, userDriverDelegate: nil)
         UpdateChecker.shared.configure(with: updaterController.updater)
+#endif
 
         hotkeyMonitor = HotkeyMonitor(
             onRecordStart: { [weak self] in
@@ -220,6 +226,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 guard let self = self else { return }
 
                 self.pendingSegments -= 1
+                print("📊 Pending segments: \(self.pendingSegments)")
 
                 if let text = result, !text.isEmpty {
                     // Clean up model artifacts
@@ -234,7 +241,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                             with: "",
                             options: .regularExpression
                         )
-                        guard !strippedText.isEmpty else { return }
+                        if strippedText.isEmpty {
+                            print("⚠️ Segment dropped (only punctuation): '\(cleanedText)'")
+                            return
+                        }
                         self.incrementalText.append(strippedText)
 
                         // Combine all segments and apply post-processing
@@ -245,7 +255,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
                         // Show in overlay as preview (don't paste yet)
                         self.recordingOverlay.updateTranscription(processedText)
+                    } else {
+                        print("⚠️ Segment dropped (empty after cleanup): original='\(text)'")
                     }
+                } else {
+                    print("⚠️ Segment returned nil/empty from ASR")
                 }
             }
         }
@@ -326,12 +340,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         audioRecorder.stopRecording { [weak self] audioURL in
             guard let self = self else { return }
 
-            // Now clear the callback after stopRecording has flushed the buffer
-            self.audioRecorder.onSpeechSegment = nil
+            // DON'T clear onSpeechSegment here - the flushed segment's transcription
+            // may still be in flight. Defer cleanup to finishIncrementalTranscription.
             self.isIncrementalMode = false
 
             // If we got incremental results, use those instead of re-transcribing
-            if !self.incrementalText.isEmpty {
+            if !self.incrementalText.isEmpty || self.pendingSegments > 0 {
                 self.finishIncrementalTranscription(audioURL: audioURL)
                 return
             }
@@ -356,6 +370,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             }
             return
         }
+
+        // Now safe to clear the callback - all pending segments have been processed
+        audioRecorder.onSpeechSegment = nil
 
         recordingOverlay.hide()
         statusBarController.setState(.idle)

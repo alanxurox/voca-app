@@ -19,14 +19,17 @@ class AudioRecorder {
 
     // Silence detection parameters
     private let silenceThreshold: Float = 0.02  // RMS threshold for silence (increased for mic noise floor)
-    private let silenceDuration: Double = 1.2   // Seconds of silence to trigger segment end (longer to avoid breaking natural pauses)
-    private let minSpeechDuration: Double = 1.0 // Minimum speech duration to process
+    private let silenceDuration: Double = 1.0   // Seconds of silence to trigger segment end (Brabble: 1.0s)
+    private let minSpeechDuration: Double = 0.3 // Minimum speech duration to process (Brabble: 300ms for single words)
+    private let maxSegmentDuration: Double = 10.0 // Force flush at silence after this duration (Brabble: 10s)
+    private let minFinalFlushDuration: Double = 0.15 // Minimum speech duration for final flush (shorter to catch "thank you")
 
     // Speech segment tracking
     private var sampleBuffer: [Float] = []
     private var silenceStartTime: Date?
     private var speechStartTime: Date?
     private var isSpeaking = false
+    private var actualSilenceSamples: Int = 0  // Track actual silence for dynamic removal
 
     // Smoothed RMS for stable visualization
     private var smoothedRMS: Float = 0
@@ -41,6 +44,7 @@ class AudioRecorder {
         speechStartTime = nil
         isSpeaking = false
         smoothedRMS = 0
+        actualSilenceSamples = 0
 
         do {
             let engine = AVAudioEngine()
@@ -95,18 +99,28 @@ class AudioRecorder {
             return
         }
 
-        audioEngine?.inputNode.removeTap(onBus: 0)
-        audioEngine?.stop()
+        audioEngine?.stop()  // Stop FIRST - flushes pending buffers
+        audioEngine?.inputNode.removeTap(onBus: 0)  // Then remove tap
+        
+        // Wait for in-flight audio callbacks to complete (race condition fix)
+        // The tap callback runs on audio render thread, needs time to flush last samples
+        Thread.sleep(forTimeInterval: 0.05)  // 50ms
+        
         audioEngine = nil
         audioFile = nil
         isRecording = false
 
-        // Process any remaining speech in buffer (call synchronously so it runs before completion)
-        if !sampleBuffer.isEmpty && sampleBuffer.count > Int(sampleRate * minSpeechDuration) {
-            let segment = sampleBuffer
+        // Process any remaining speech in buffer with lower threshold for final flush
+        let minFinalSamples = Int(sampleRate * minFinalFlushDuration)
+        if !sampleBuffer.isEmpty && sampleBuffer.count > minFinalSamples {
+            let samplesToKeep = max(0, sampleBuffer.count - actualSilenceSamples)
+            let segment = Array(sampleBuffer.prefix(samplesToKeep))
             sampleBuffer = []
-            print("📝 Flushing final segment: \(segment.count) samples")
-            onSpeechSegment?(segment)
+            actualSilenceSamples = 0
+            if segment.count > minFinalSamples {
+                print("📝 Flushing final segment: \(segment.count) samples (\(Double(segment.count) / sampleRate)s)")
+                onSpeechSegment?(segment)
+            }
         }
 
         print("Recording stopped")
@@ -166,45 +180,60 @@ class AudioRecorder {
         }
 
         // Speech/silence detection using raw RMS (not smoothed, for accurate timing)
-        detectSpeechSegment(rms: rms)
+        // Pass actual frame count for accurate silence sample tracking
+        detectSpeechSegment(rms: rms, frameCount: Int(outputBuffer.frameLength))
     }
 
-    private func detectSpeechSegment(rms: Float) {
+    private func detectSpeechSegment(rms: Float, frameCount: Int) {
         let now = Date()
 
         if rms > silenceThreshold {
-            // Sound detected
+            // Sound detected - reset silence tracking
             silenceStartTime = nil
+            actualSilenceSamples = 0
 
             if !isSpeaking {
                 // Speech started
                 isSpeaking = true
                 speechStartTime = now
-                print("🎤 Speech started")
+                print("🎙 Speech started")
             }
         } else {
-            // Silence detected
+            // Silence detected - track actual silence samples using real frame count
+            actualSilenceSamples += frameCount
+
             if isSpeaking {
                 if silenceStartTime == nil {
                     silenceStartTime = now
-                } else if let silenceStart = silenceStartTime,
-                          now.timeIntervalSince(silenceStart) >= silenceDuration {
-                    // Silence duration exceeded - segment complete
+                }
 
+                // Calculate current segment duration from buffer size
+                let currentSegmentDuration = Double(sampleBuffer.count) / sampleRate
+
+                // Force flush if segment exceeds maxSegmentDuration (even with short silence)
+                // This prevents long segments that cause ASR to lose accuracy
+                let shouldForceFlush = currentSegmentDuration >= maxSegmentDuration
+
+                // Normal flush: silence >= silenceDuration
+                // Force flush: segment >= maxSegmentDuration (at first silence moment)
+                let silenceExceeded = silenceStartTime.map { now.timeIntervalSince($0) >= silenceDuration } ?? false
+
+                if silenceExceeded || shouldForceFlush {
                     // Check minimum speech duration
                     if let speechStart = speechStartTime,
-                       now.timeIntervalSince(speechStart) >= minSpeechDuration + silenceDuration {
+                       now.timeIntervalSince(speechStart) >= minSpeechDuration + (shouldForceFlush ? 0 : silenceDuration) {
 
-                        // Remove trailing silence from buffer (approximate)
-                        let silenceSamples = Int(silenceDuration * sampleRate)
-                        let segmentEnd = max(0, sampleBuffer.count - silenceSamples)
+                        // Remove actual tracked silence from buffer (not fixed 1.2s)
+                        let segmentEnd = max(0, sampleBuffer.count - actualSilenceSamples)
 
                         if segmentEnd > Int(sampleRate * minSpeechDuration) {
-                            let segment = Array(sampleBuffer[0..<segmentEnd])
-                            print("📝 Speech segment: \(segment.count) samples (\(Double(segment.count) / sampleRate)s)")
+                            // Use prefix/dropFirst for safe slicing
+                            let segment = Array(sampleBuffer.prefix(segmentEnd))
+                            let flushReason = shouldForceFlush ? "maxDuration" : "silence"
+                            print("📝 Speech segment (\(flushReason)): \(segment.count) samples (\(Double(segment.count) / sampleRate)s)")
 
                             // Keep some overlap for context, but start fresh for next segment
-                            sampleBuffer = Array(sampleBuffer[segmentEnd...])
+                            sampleBuffer = Array(sampleBuffer.dropFirst(segmentEnd))
 
                             DispatchQueue.main.async { [weak self] in
                                 self?.onSpeechSegment?(segment)
@@ -216,6 +245,7 @@ class AudioRecorder {
                     isSpeaking = false
                     speechStartTime = nil
                     silenceStartTime = nil
+                    actualSilenceSamples = 0
                 }
             }
         }

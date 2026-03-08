@@ -21,3 +21,7 @@ models/
 # Temporary
 *.log
 tmp/
+
+# OMC/OMO artifacts (agent tooling, not shared)
+.omc/
+.omo/
